@@ -11,20 +11,8 @@ dotenv.config();
 const app = express();
 
 // Pintu Tol Komunikasi (CORS) - Standar AlvezaDigital
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://vault.novuq.com',
-].filter(Boolean);
-
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like curl, mobile apps, same-origin proxy)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(null, true); // Allow all in production behind proxy
-  },
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 
