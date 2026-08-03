@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_URL = process.env.API_URL || 'http://localhost:5001';
 
-// Reverse Proxy for API requests
+// Reverse Proxy for API requests — JANGAN pasang express.json() sebelum proxy!
 app.use(
   '/api',
   createProxyMiddleware({
