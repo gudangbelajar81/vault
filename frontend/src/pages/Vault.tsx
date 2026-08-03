@@ -157,12 +157,12 @@ export const Vault = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3 md:mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary">Password Vault</h2>
-          <p className="text-text-muted text-sm mt-1">Manage your secure credentials.</p>
+          <h2 className="text-xl md:text-2xl font-bold text-text-primary">Password Vault</h2>
+          <p className="text-text-muted text-[11px] md:text-sm mt-0.5 md:mt-1">Manage your secure credentials.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3">
           <input 
             type="file" 
             accept=".csv" 
@@ -173,30 +173,30 @@ export const Vault = () => {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="bg-surface hover:bg-surface/80 border border-border text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+            className="bg-surface hover:bg-surface/80 border border-border text-white px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-medium flex items-center gap-1.5 md:gap-2 transition-transform active:scale-95 disabled:opacity-50 text-[11px] md:text-base"
             title="Import from Chrome CSV"
           >
-            <Upload size={18} />
-            {importing ? 'Importing...' : 'Import CSV'}
+            <Upload size={14} className="md:w-[18px] md:h-[18px]" />
+            {importing ? 'Importing...' : <span className="hidden md:inline">Import CSV</span>}
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+            className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-medium flex items-center gap-1.5 md:gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)] text-[11px] md:text-base"
           >
-            <Plus size={18} />
-            New Item
+            <Plus size={14} className="md:w-[18px] md:h-[18px]" />
+            New<span className="hidden md:inline">&nbsp;Item</span>
           </button>
         </div>
       </div>
 
       {/* Search & Filter bar */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-3 md:mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted md:w-[18px] md:h-[18px]" />
           <input 
             type="text" 
             placeholder="Search vault..." 
-            className="w-full bg-surface/50 border border-border rounded-lg pl-10 pr-4 py-2 text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            className="w-full bg-surface/50 border border-border rounded-lg pl-9 md:pl-10 pr-4 py-1.5 md:py-2 text-[13px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
       </div>
@@ -217,31 +217,31 @@ export const Vault = () => {
             <table className="w-full text-left border-collapse">
               <thead className="bg-surface/80 border-b border-border sticky top-0 z-10 backdrop-blur-md">
                 <tr>
-                  <th className="px-4 py-3 md:px-6 md:py-4 text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Title</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Title</th>
                   <th className="hidden md:table-cell px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Username</th>
                   <th className="hidden lg:table-cell px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Updated</th>
-                  <th className="px-4 py-3 md:px-6 md:py-4 text-right text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-right text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-4 py-3 md:px-6 md:py-4">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm md:text-base shrink-0">
+                    <td className="px-2 py-1.5 md:px-6 md:py-4">
+                      <div className="flex items-center gap-1.5 md:gap-3">
+                        <div className="h-9 w-9 md:h-10 md:w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-xs md:text-base shrink-0">
                           {item.title.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1 md:gap-2">
-                            <p className="font-medium text-text-primary text-sm md:text-base truncate">{item.title}</p>
+                            <p className="font-medium text-text-primary text-[13px] md:text-base truncate leading-tight">{item.title}</p>
                             {item.favorite && <Star size={10} className="text-warning fill-warning shrink-0 md:w-3 md:h-3" />}
                           </div>
                           {/* Show username on mobile below title */}
-                          <div className="md:hidden text-[10px] text-text-muted truncate mt-0.5">
+                          <div className="md:hidden text-[10px] text-text-muted truncate mt-0.5 leading-tight">
                             {item.decrypted?.username || 'No username'}
                           </div>
                           {item.decrypted?.url && (
-                            <a href={item.decrypted.url} target="_blank" rel="noreferrer" className="text-[10px] md:text-xs text-info hover:underline flex items-center gap-1 mt-0.5 truncate">
+                            <a href={item.decrypted.url} target="_blank" rel="noreferrer" className="text-[10px] md:text-xs text-info hover:underline flex items-center gap-1 mt-0.5 truncate leading-tight">
                               {item.decrypted.url} <ExternalLink size={8} className="md:w-[10px] md:h-[10px]" />
                             </a>
                           )}
@@ -254,8 +254,8 @@ export const Vault = () => {
                     <td className="hidden lg:table-cell px-6 py-4 text-text-muted text-sm">
                       {new Date(item.updatedAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 md:px-6 md:py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 md:gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-2 py-1.5 md:px-6 md:py-4 text-right">
+                      <div className="flex items-center justify-end gap-0.5 md:gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => {
                             if (item.decrypted?.password) {
@@ -268,10 +268,10 @@ export const Vault = () => {
                           className="p-1.5 md:p-2 text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           title="Copy Password"
                         >
-                          <Copy size={14} className="md:w-4 md:h-4" />
+                          <Copy size={16} className="md:w-4 md:h-4" />
                         </button>
                         <button className="p-1.5 md:p-2 text-text-muted hover:text-text-primary hover:bg-white/10 rounded-lg transition-colors">
-                          <MoreVertical size={14} className="md:w-4 md:h-4" />
+                          <MoreVertical size={16} className="md:w-4 md:h-4" />
                         </button>
                       </div>
                     </td>

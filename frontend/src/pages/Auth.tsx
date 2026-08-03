@@ -54,10 +54,10 @@ export const Auth = () => {
         </p>
       </div>
       
-      <div className="p-6 md:p-8 rounded-2xl bg-surface/50 border border-border backdrop-blur-xl max-w-md w-full shadow-[0_0_40px_rgba(var(--color-primary),0.1)]">
+      <div className="p-4 md:p-8 rounded-2xl bg-surface/50 border border-border backdrop-blur-xl max-w-md w-full shadow-[0_0_40px_rgba(var(--color-primary),0.1)]">
         
         {/* Toggle Login/Register */}
-        <div className="flex bg-black/40 rounded-lg p-1 mb-6 border border-border">
+        <div className="flex bg-black/40 rounded-lg p-1 mb-4 md:mb-6 border border-border">
           <button 
             type="button"
             onClick={() => setIsRegister(false)}
@@ -74,41 +74,41 @@ export const Auth = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 md:gap-5">
           <div>
-            <label className="text-xs md:text-sm font-medium text-text-muted mb-1 block">Email Address</label>
+            <label className="text-[11px] md:text-sm font-medium text-text-muted mb-1 block">Email Address</label>
             <input 
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-black/40 border border-border rounded-lg px-3 py-2.5 md:px-4 md:py-3 text-sm md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/40 border border-border rounded-lg px-2.5 py-1.5 md:px-4 md:py-3 text-xs md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="you@example.com"
             />
           </div>
           <div className="relative">
-            <label className="text-xs md:text-sm font-medium text-text-muted mb-1 block">Account Password (Login)</label>
+            <label className="text-[11px] md:text-sm font-medium text-text-muted mb-1 block">Account Password (Login)</label>
             <input 
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-black/40 border border-border rounded-lg px-3 py-2.5 md:px-4 md:py-3 pr-10 text-sm md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/40 border border-border rounded-lg px-2.5 py-1.5 md:px-4 md:py-3 pr-10 text-xs md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="••••••••"
             />
             <button 
               type="button" 
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-7 md:top-8 text-text-muted hover:text-primary transition-colors p-1"
+              className="absolute right-2 md:right-3 top-[26px] md:top-8 text-text-muted hover:text-primary transition-colors p-1"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
           
-          <div className="h-px w-full bg-border my-1 md:my-2"></div>
+          <div className="h-px w-full bg-border my-0.5 md:my-2"></div>
           
           <div className="relative">
-            <label className="text-xs md:text-sm font-medium text-text-muted mb-1 block">
+            <label className="text-[11px] md:text-sm font-medium text-text-muted mb-1 block">
               {isRegister ? 'Master Password (Rahasia untuk Enkripsi)' : 'Master Password (Decryption)'}
             </label>
             <input 
@@ -116,15 +116,15 @@ export const Auth = () => {
               value={masterPassword}
               onChange={(e) => setMasterPasswordLocal(e.target.value)}
               required
-              className="w-full bg-black/40 border border-primary/50 rounded-lg px-3 py-2.5 md:px-4 md:py-3 pr-10 text-sm md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/40 border border-primary/50 rounded-lg px-2.5 py-1.5 md:px-4 md:py-3 pr-10 text-xs md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="Kunci Utama Vault..."
             />
             <button 
               type="button" 
               onClick={() => setShowMasterPassword(!showMasterPassword)}
-              className="absolute right-3 top-7 md:top-8 text-text-muted hover:text-primary transition-colors p-1"
+              className="absolute right-2 md:right-3 top-[26px] md:top-8 text-text-muted hover:text-primary transition-colors p-1"
             >
-              {showMasterPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showMasterPassword ? <EyeOff size={14} className="md:w-4 md:h-4" /> : <Eye size={14} className="md:w-4 md:h-4" />}
             </button>
             <p className="text-[10px] md:text-xs text-text-muted mt-1.5 md:mt-2 flex items-center gap-1">
               <Shield size={12} className="shrink-0" /> 
@@ -135,16 +135,16 @@ export const Auth = () => {
           <button 
             type="submit"
             disabled={loading}
-            className="mt-2 w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-bold py-2.5 md:py-3 px-4 rounded-lg transition-transform active:scale-95 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(var(--color-primary),0.3)] text-sm md:text-base"
+            className="mt-1 md:mt-2 w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-white font-bold py-2 md:py-3 px-4 rounded-lg transition-transform active:scale-95 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(var(--color-primary),0.3)] text-xs md:text-base"
           >
             {loading ? 'Memproses...' : (isRegister ? 'Create Account & Unlock' : 'Unlock Vault')}
           </button>
           
           <button 
             type="button"
-            className="w-full bg-surface hover:bg-surface/80 border border-border text-text-primary font-medium py-2.5 md:py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-sm md:text-base"
+            className="w-full bg-surface hover:bg-surface/80 border border-border text-text-primary font-medium py-2 md:py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-xs md:text-base"
           >
-            <Fingerprint size={18} />
+            <Fingerprint size={16} className="md:w-[18px] md:h-[18px]" />
             Unlock with Biometrics
           </button>
         </form>

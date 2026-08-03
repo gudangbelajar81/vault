@@ -79,8 +79,8 @@ export const DashboardLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden pb-16 md:pb-0">
-        <header className="h-14 md:h-16 border-b border-border bg-surface/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 sticky top-0 z-20">
+      <main className="flex-1 flex flex-col relative overflow-hidden pb-14 md:pb-0">
+        <header className="h-12 md:h-16 border-b border-border bg-surface/80 backdrop-blur-xl flex items-center justify-between px-3 md:px-8 sticky top-0 z-20">
           <div className="flex items-center gap-2">
             {/* Mobile Title */}
             <div className="md:hidden text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider">
@@ -95,7 +95,7 @@ export const DashboardLayout = () => {
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
+        <div className="flex-1 overflow-y-auto p-2 md:p-8 relative">
           <InstallPrompt />
           <Outlet />
         </div>
@@ -103,7 +103,7 @@ export const DashboardLayout = () => {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-border z-30 pb-safe">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-around h-14 px-2">
           {bottomNavItems.map((item) => {
             const isActive = location.pathname === item.to;
             return (
@@ -124,7 +124,7 @@ export const DashboardLayout = () => {
             onClick={() => setIsMobileMenuOpen(true)}
             className="flex flex-col items-center justify-center w-full h-full gap-1 text-text-muted hover:text-text-primary transition-colors"
           >
-            <Menu size={20} />
+            <Menu size={18} />
             <span className="text-[10px] font-medium leading-none">More</span>
           </button>
         </div>
@@ -133,39 +133,39 @@ export const DashboardLayout = () => {
       {/* Mobile More Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md animate-in fade-in duration-200 flex flex-col">
-          <div className="h-14 border-b border-border flex items-center justify-between px-4">
-            <h2 className="font-bold">More Options</h2>
+          <div className="h-12 border-b border-border flex items-center justify-between px-4">
+            <h2 className="font-bold text-sm">More Options</h2>
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-text-muted hover:text-text-primary">
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {navItems.slice(4).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border"
+                className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-border"
               >
-                <item.icon size={24} className="text-primary" />
-                <span className="font-semibold">{item.label}</span>
+                <item.icon size={20} className="text-primary" />
+                <span className="font-semibold text-sm">{item.label}</span>
               </NavLink>
             ))}
-            <div className="h-px bg-border my-4" />
+            <div className="h-px bg-border my-2" />
             <NavLink
               to="/settings"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border"
+              className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-border"
             >
-              <Settings size={24} className="text-text-muted" />
-              <span className="font-semibold">Settings</span>
+              <Settings size={20} className="text-text-muted" />
+              <span className="font-semibold text-sm">Settings</span>
             </NavLink>
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger mt-4"
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger mt-3"
             >
-              <LogOut size={24} />
-              <span className="font-semibold">Lock & Logout</span>
+              <LogOut size={20} />
+              <span className="font-semibold text-sm">Lock & Logout</span>
             </button>
           </div>
         </div>
