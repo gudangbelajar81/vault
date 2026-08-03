@@ -1,31 +1,36 @@
-import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
+import { InstallPrompt } from '../components/InstallPrompt';
 
 const navItems = [
-  { to: '/vault', icon: Shield, label: 'Password Vault' },
+  { to: '/vault', icon: Shield, label: 'Vault' },
   { to: '/api-keys', icon: Key, label: 'API Keys' },
-  { to: '/subscriptions', icon: CreditCard, label: 'Subscriptions' },
+  { to: '/subscriptions', icon: CreditCard, label: 'Subs' },
   { to: '/courses', icon: GraduationCap, label: 'Courses' },
   { to: '/shortcuts', icon: Link2, label: 'Shortcuts' },
-  { to: '/identity-map', icon: Network, label: 'Identity Map' },
+  { to: '/identity-map', icon: Network, label: 'Identity' },
 ];
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setMasterPassword } = useVaultStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    // Call API logout
     setMasterPassword(null);
     navigate('/');
   };
 
+  // Top 4 items for bottom nav
+  const bottomNavItems = navItems.slice(0, 4);
+
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-surface/50 border-r border-border backdrop-blur-xl flex flex-col">
+      {/* Desktop Sidebar (Hidden on Mobile) */}
+      <aside className="hidden md:flex w-64 bg-surface/50 border-r border-border backdrop-blur-xl flex-col">
         <div className="p-6">
           <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider">
             VaultPro
@@ -74,20 +79,97 @@ export const DashboardLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden">
-        <header className="h-16 border-b border-border bg-surface/30 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="text-sm text-text-muted">Command Center</div>
+      <main className="flex-1 flex flex-col relative overflow-hidden pb-16 md:pb-0">
+        <header className="h-14 md:h-16 border-b border-border bg-surface/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 sticky top-0 z-20">
+          <div className="flex items-center gap-2">
+            {/* Mobile Title */}
+            <div className="md:hidden text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider">
+              VaultPro
+            </div>
+            <div className="hidden md:block text-sm text-text-muted">Command Center</div>
+          </div>
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
               A
             </div>
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto p-8 relative">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative">
+          <InstallPrompt />
           <Outlet />
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-border z-30 pb-safe">
+        <div className="flex items-center justify-around h-16 px-2">
+          {bottomNavItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+                  isActive ? 'text-primary' : 'text-text-muted hover:text-text-primary'
+                }`}
+              >
+                <item.icon size={20} className={isActive ? 'drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]' : ''} />
+                <span className="text-[10px] font-medium leading-none">{item.label}</span>
+              </NavLink>
+            );
+          })}
+          
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex flex-col items-center justify-center w-full h-full gap-1 text-text-muted hover:text-text-primary transition-colors"
+          >
+            <Menu size={20} />
+            <span className="text-[10px] font-medium leading-none">More</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile More Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md animate-in fade-in duration-200 flex flex-col">
+          <div className="h-14 border-b border-border flex items-center justify-between px-4">
+            <h2 className="font-bold">More Options</h2>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-text-muted hover:text-text-primary">
+              <X size={24} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {navItems.slice(4).map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border"
+              >
+                <item.icon size={24} className="text-primary" />
+                <span className="font-semibold">{item.label}</span>
+              </NavLink>
+            ))}
+            <div className="h-px bg-border my-4" />
+            <NavLink
+              to="/settings"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border"
+            >
+              <Settings size={24} className="text-text-muted" />
+              <span className="font-semibold">Settings</span>
+            </NavLink>
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger mt-4"
+            >
+              <LogOut size={24} />
+              <span className="font-semibold">Lock & Logout</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
