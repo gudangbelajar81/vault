@@ -145,7 +145,7 @@ export const bulkUpdateVaultItems = async (req: AuthRequest, res: Response): Pro
 export const updateVaultItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     if (!userId) {
       res.status(401).json({ success: false, message: 'Unauthorized' });
       return;
@@ -188,7 +188,7 @@ export const updateVaultItem = async (req: AuthRequest, res: Response): Promise<
 export const deleteVaultItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     if (!userId) {
       res.status(401).json({ success: false, message: 'Unauthorized' });
       return;

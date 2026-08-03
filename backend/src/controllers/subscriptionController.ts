@@ -61,7 +61,7 @@ export const createSubscription = async (req: AuthRequest, res: Response): Promi
 export const updateSubscription = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     if (!userId) return sendResponse(res, 401, false, 'Unauthorized');
 
     const existing = await prisma.subscription.findFirst({ where: { id, userId } });
@@ -94,7 +94,7 @@ export const updateSubscription = async (req: AuthRequest, res: Response): Promi
 export const deleteSubscription = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     if (!userId) return sendResponse(res, 401, false, 'Unauthorized');
 
     const existing = await prisma.subscription.findFirst({ where: { id, userId } });
