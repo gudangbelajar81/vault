@@ -103,30 +103,32 @@ export const DashboardLayout = () => {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-border z-30 pb-safe">
-        <div className="flex items-center justify-around h-14 px-2">
-          {bottomNavItems.map((item) => {
-            const isActive = location.pathname === item.to;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-                  isActive ? 'text-primary' : 'text-text-muted hover:text-text-primary'
-                }`}
-              >
-                <item.icon size={20} className={isActive ? 'drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]' : ''} />
-                <span className="text-[10px] font-medium leading-none">{item.label}</span>
-              </NavLink>
-            );
-          })}
-          
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center w-full h-full gap-1 text-text-muted hover:text-text-primary transition-colors"
-          >
-            <Menu size={18} />
-            <span className="text-[10px] font-medium leading-none">More</span>
-          </button>
+        <div className="flex items-center gap-5 sm:gap-8 h-14 px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex mx-auto items-center gap-5 sm:gap-8 min-w-max">
+            {bottomNavItems.map((item) => {
+              const isActive = location.pathname === item.to;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={`flex-shrink-0 min-w-[52px] flex flex-col items-center justify-center h-full gap-1 transition-colors ${
+                    isActive ? 'text-primary' : 'text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  <item.icon size={20} className={isActive ? 'drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]' : ''} />
+                  <span className="text-[10px] font-medium leading-none">{item.label}</span>
+                </NavLink>
+              );
+            })}
+            
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex-shrink-0 min-w-[52px] flex flex-col items-center justify-center h-full gap-1 text-text-muted hover:text-text-primary transition-colors"
+            >
+              <Menu size={18} />
+              <span className="text-[10px] font-medium leading-none">More</span>
+            </button>
+          </div>
         </div>
       </nav>
 
