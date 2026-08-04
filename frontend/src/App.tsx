@@ -11,6 +11,8 @@ import { Settings } from './pages/Settings';
 import { IdentityMap } from './pages/IdentityMap';
 import { useVaultStore } from './store/vaultStore';
 
+import { Toaster } from 'react-hot-toast';
+
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isUnlocked = useVaultStore((state) => state.isUnlocked);
@@ -24,8 +26,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <>
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          style: {
+            background: '#111116',
+            color: '#fff',
+            border: '1px solid #2a2a35',
+            fontSize: '14px',
+            borderRadius: '12px'
+          },
+        }} 
+      />
+      <BrowserRouter>
+        <Routes>
         <Route path="/" element={<Auth />} />
         
         {/* Dashboard Routes (Protected) */}
@@ -46,6 +61,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 

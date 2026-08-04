@@ -5,6 +5,7 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
 import Papa from 'papaparse';
+import toast from 'react-hot-toast';
 
 export const Vault = () => {
   const { masterPassword } = useVaultStore();
@@ -91,9 +92,10 @@ export const Vault = () => {
       setIsModalOpen(false);
       setFormData({ title: '', username: '', password: '', url: '', notes: '', favorite: false });
       fetchItems();
+      toast.success('Berhasil menyimpan data');
     } catch (error) {
       console.error(error);
-      alert('Gagal menyimpan data');
+      toast.error('Gagal menyimpan data');
     } finally {
       setSaving(false);
     }
@@ -142,11 +144,11 @@ export const Vault = () => {
           // Send to backend bulk API
           await axios.post(`${API_URL}/api/vault`, { items: encryptedItems }, { withCredentials: true });
           
-          alert(`Berhasil mengimpor ${encryptedItems.length} data password!`);
+          toast.success(`Berhasil mengimpor ${encryptedItems.length} data password!`);
           fetchItems();
         } catch (error) {
           console.error(error);
-          alert('Gagal mengimpor data CSV.');
+          toast.error('Gagal mengimpor data CSV.');
         } finally {
           setImporting(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
@@ -214,35 +216,36 @@ export const Vault = () => {
           </div>
         ) : (
           <div className="overflow-y-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-surface/80 border-b border-border sticky top-0 z-10 backdrop-blur-md">
+            <table className="w-full text-left border-collapse block md:table">
+              <thead className="bg-surface/80 border-b border-border sticky top-0 z-10 backdrop-blur-md hidden md:table-header-group">
                 <tr>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Title</th>
-                  <th className="hidden md:table-cell px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Username</th>
-                  <th className="hidden lg:table-cell px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Updated</th>
-                  <th className="px-2 py-2 md:px-6 md:py-4 text-right text-[10px] md:text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Title</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Username</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Updated</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border block md:table-row-group">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-2 py-1.5 md:px-6 md:py-4">
-                      <div className="flex items-center gap-1.5 md:gap-3">
-                        <div className="h-9 w-9 md:h-10 md:w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-xs md:text-base shrink-0">
+                  <tr key={item.id} className="hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-1.5 px-2 md:py-0 md:px-0">
+                    <td className="flex-1 md:flex-none p-0 md:px-6 md:py-4">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="h-7 w-7 md:h-10 md:w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-[12px] md:text-base shrink-0">
                           {item.title.charAt(0).toUpperCase()}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 md:gap-2">
-                            <p className="font-medium text-text-primary text-[13px] md:text-base truncate leading-tight">{item.title}</p>
+                            <p className="font-medium text-text-primary text-[12px] md:text-base truncate leading-tight">{item.title}</p>
                             {item.favorite && <Star size={10} className="text-warning fill-warning shrink-0 md:w-3 md:h-3" />}
                           </div>
-                          {/* Show username on mobile below title */}
-                          <div className="md:hidden text-[10px] text-text-muted truncate mt-0.5 leading-tight">
+                          {/* Username on mobile */}
+                          <div className="md:hidden text-[10px] text-text-muted truncate leading-[1.1]">
                             {item.decrypted?.username || 'No username'}
                           </div>
+                          {/* URL on desktop only */}
                           {item.decrypted?.url && (
-                            <a href={item.decrypted.url} target="_blank" rel="noreferrer" className="text-[10px] md:text-xs text-info hover:underline flex items-center gap-1 mt-0.5 truncate leading-tight">
-                              {item.decrypted.url} <ExternalLink size={8} className="md:w-[10px] md:h-[10px]" />
+                            <a href={item.decrypted.url} target="_blank" rel="noreferrer" className="hidden md:flex text-xs text-info hover:underline items-center gap-1 mt-0.5 truncate leading-tight">
+                              {item.decrypted.url} <ExternalLink size={10} />
                             </a>
                           )}
                         </div>
@@ -251,27 +254,26 @@ export const Vault = () => {
                     <td className="hidden md:table-cell px-6 py-4 text-text-muted text-sm">
                       {item.decrypted?.username || '-'}
                     </td>
-                    <td className="hidden lg:table-cell px-6 py-4 text-text-muted text-sm">
+                    <td className="hidden md:table-cell px-6 py-4 text-text-muted text-sm">
                       {new Date(item.updatedAt).toLocaleDateString()}
                     </td>
-                    <td className="px-2 py-1.5 md:px-6 md:py-4 text-right">
+                    <td className="flex-none p-0 md:px-6 md:py-4 text-right">
                       <div className="flex items-center justify-end gap-0.5 md:gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => {
                             if (item.decrypted?.password) {
                               navigator.clipboard.writeText(item.decrypted.password);
-                              // Haptic feedback (Protocol 20)
                               if (navigator.vibrate) navigator.vibrate(30);
-                              alert('Password berhasil disalin!');
+                              toast.success('Password disalin!');
                             }
                           }}
-                          className="p-1.5 md:p-2 text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          className="p-1 md:p-2 text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           title="Copy Password"
                         >
-                          <Copy size={16} className="md:w-4 md:h-4" />
+                          <Copy size={14} className="md:w-4 md:h-4" />
                         </button>
-                        <button className="p-1.5 md:p-2 text-text-muted hover:text-text-primary hover:bg-white/10 rounded-lg transition-colors">
-                          <MoreVertical size={16} className="md:w-4 md:h-4" />
+                        <button className="p-1 md:p-2 text-text-muted hover:text-text-primary hover:bg-white/10 rounded-lg transition-colors">
+                          <MoreVertical size={14} className="md:w-4 md:h-4" />
                         </button>
                       </div>
                     </td>
