@@ -159,12 +159,9 @@ export const Vault = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-3 md:mb-6">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-text-primary">Password Vault</h2>
-          <p className="text-text-muted text-[11px] md:text-sm mt-0.5 md:mt-1">Manage your secure credentials.</p>
-        </div>
-        <div className="flex gap-2 md:gap-3">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-base font-bold text-text-primary">Password Vault</h2>
+        <div className="flex gap-1.5 md:gap-2">
           <input 
             type="file" 
             accept=".csv" 
@@ -175,71 +172,72 @@ export const Vault = () => {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="bg-surface hover:bg-surface/80 border border-border text-white px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-medium flex items-center gap-1.5 md:gap-2 transition-transform active:scale-95 disabled:opacity-50 text-[11px] md:text-base"
+            className="bg-surface hover:bg-surface/80 border border-border text-text-primary px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 disabled:opacity-50 text-xs"
             title="Import from Chrome CSV"
           >
-            <Upload size={14} className="md:w-[18px] md:h-[18px]" />
+            <Upload size={12} />
             {importing ? 'Importing...' : <span className="hidden md:inline">Import CSV</span>}
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-medium flex items-center gap-1.5 md:gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)] text-[11px] md:text-base"
+            className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
           >
-            <Plus size={14} className="md:w-[18px] md:h-[18px]" />
-            New<span className="hidden md:inline">&nbsp;Item</span>
+            <Plus size={12} />
+            <span className="hidden sm:inline">New Item</span>
+            <span className="sm:hidden">Baru</span>
           </button>
         </div>
       </div>
 
       {/* Search & Filter bar */}
-      <div className="flex gap-4 mb-3 md:mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted md:w-[18px] md:h-[18px]" />
+      <div className="flex gap-4 mb-3">
+        <div className="relative flex-1 w-full">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input 
             type="text" 
             placeholder="Search vault..." 
-            className="w-full bg-surface/50 border border-border rounded-lg pl-9 md:pl-10 pr-4 py-1.5 md:py-2 text-[13px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
       </div>
 
       {/* Vault List */}
-      <div className="flex-1 bg-surface/50 border border-border rounded-2xl overflow-hidden backdrop-blur-xl flex flex-col">
+      <div className="flex-1 bg-surface/50 border border-border rounded-lg overflow-hidden backdrop-blur-xl flex flex-col">
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center flex-col text-text-muted p-4 text-center">
-            <Shield size={48} className="mb-4 opacity-50" />
-            <p>Vault masih kosong. Tambahkan item pertama Anda.</p>
+          <div className="flex-1 flex items-center justify-center flex-col text-text-muted py-10 opacity-50">
+            <Shield size={32} className="mb-2" />
+            <p className="text-xs">Vault masih kosong.</p>
           </div>
         ) : (
           <div className="overflow-y-auto">
             <table className="w-full text-left border-collapse block md:table">
               <thead className="bg-surface/80 border-b border-border sticky top-0 z-10 backdrop-blur-md hidden md:table-header-group">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Username</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-text-muted uppercase tracking-wider">Updated</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider">Actions</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Title</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Username</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Updated</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-semibold text-text-muted uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border block md:table-row-group">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-1.5 px-2 md:py-0 md:px-0">
-                    <td className="flex-1 md:flex-none p-0 md:px-6 md:py-4">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <div className="h-7 w-7 md:h-10 md:w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-[12px] md:text-base shrink-0">
+                  <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-2 px-2 md:py-0 md:px-0 border-b border-border/50 md:border-none">
+                    <td className="flex-1 md:flex-none p-0 md:px-3 md:py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-md bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                           {item.title.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <p className="font-medium text-text-primary text-[12px] md:text-base truncate leading-tight">{item.title}</p>
-                            {item.favorite && <Star size={10} className="text-warning fill-warning shrink-0 md:w-3 md:h-3" />}
+                          <div className="flex items-center gap-1">
+                            <p className="font-semibold text-text-primary text-xs truncate leading-tight">{item.title}</p>
+                            {item.favorite && <Star size={10} className="text-warning fill-warning shrink-0" />}
                           </div>
                           {/* Username on mobile */}
-                          <div className="md:hidden text-[10px] text-text-muted truncate leading-[1.1]">
+                          <div className="md:hidden text-[10px] text-text-muted truncate leading-tight">
                             {item.decrypted?.username || 'No username'}
                           </div>
                           {/* URL on desktop only */}
@@ -272,7 +270,7 @@ export const Vault = () => {
                         >
                           <Copy size={14} className="md:w-4 md:h-4" />
                         </button>
-                        <button className="p-1 md:p-2 text-text-muted hover:text-text-primary hover:bg-white/10 rounded-lg transition-colors">
+                        <button className="p-1 md:p-2 text-text-muted hover:text-text-primary hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors">
                           <MoreVertical size={14} className="md:w-4 md:h-4" />
                         </button>
                       </div>
@@ -287,111 +285,111 @@ export const Vault = () => {
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111116] border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">Add New Vault Item</h3>
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-3 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">Add New Vault Item</h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-text-muted hover:text-white transition-colors"
+                className="text-text-muted hover:text-text-primary transition-colors"
               >
-                <X size={24} />
+                <X size={16} />
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-6 flex-1 overflow-y-auto flex flex-col gap-4">
+            <form onSubmit={handleSave} className="p-3 flex-1 overflow-y-auto flex flex-col gap-2">
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Title *</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Title *</label>
                 <input 
                   type="text" 
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   required
                   placeholder="e.g. Netflix, Github, Bank..."
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Username / Email</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Username / Email</label>
                 <input 
                   type="text" 
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
                   placeholder="johndoe / john@example.com"
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Password</label>
-                <div className="flex gap-2">
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Password</label>
+                <div className="flex gap-1.5">
                   <div className="relative flex-1">
                     <input 
                       type={showFormPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 pr-10 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 pr-8 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     />
                     <button 
                       type="button" 
                       onClick={() => setShowFormPassword(!showFormPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
                     >
-                      {showFormPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showFormPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                   <button 
                     type="button"
                     onClick={generatePassword}
-                    className="bg-surface border border-border hover:bg-surface/80 text-primary px-3 rounded-lg transition-colors flex items-center gap-1"
+                    className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors flex items-center justify-center"
                     title="Generate Random Password"
                   >
-                    <RefreshCw size={16} />
+                    <RefreshCw size={14} />
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Website URL</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Website URL</label>
                 <input 
                   type="url" 
                   value={formData.url}
                   onChange={(e) => setFormData({...formData, url: e.target.value})}
                   placeholder="https://..."
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Notes (Secure)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Notes (Secure)</label>
                 <textarea 
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  rows={3}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  rows={2}
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
               </div>
 
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1.5 mt-1">
                 <input 
                   type="checkbox" 
                   id="favorite"
                   checked={formData.favorite}
                   onChange={(e) => setFormData({...formData, favorite: e.target.checked})}
-                  className="rounded border-border bg-black text-primary focus:ring-primary focus:ring-offset-0 h-4 w-4"
+                  className="rounded border-border bg-black/10 dark:bg-black text-primary focus:ring-primary focus:ring-offset-0 h-3 w-3"
                 />
-                <label htmlFor="favorite" className="text-sm text-text-muted cursor-pointer select-none">
+                <label htmlFor="favorite" className="text-[10px] text-text-muted cursor-pointer select-none">
                   Mark as Favorite
                 </label>
               </div>
             </form>
 
-            <div className="p-6 border-t border-border flex justify-end gap-3 bg-surface/30">
+            <div className="p-3 border-t border-border flex justify-end gap-2 bg-surface/30">
               <button 
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium"
+                className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs"
               >
                 Cancel
               </button>
@@ -399,9 +397,9 @@ export const Vault = () => {
                 type="button"
                 onClick={handleSave}
                 disabled={saving || !formData.title}
-                className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md"
+                className="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md text-xs"
               >
-                {saving ? 'Encrypting...' : 'Save securely'}
+                {saving ? 'Encrypting...' : 'Save'}
               </button>
             </div>
           </div>

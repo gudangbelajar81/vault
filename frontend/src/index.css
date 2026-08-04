@@ -1,25 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #6C63FF;
-  --color-secondary: #00D9FF;
-  --color-success: #00C896;
-  --color-warning: #FFB347;
-  --color-danger: #FF4757;
-  --color-info: #38BDF8;
+  --color-primary: #6366F1; /* Indigo 500 - Premium & Fresh */
+  --color-secondary: #0EA5E9; /* Sky 500 */
+  --color-success: #10B981; /* Emerald 500 */
+  --color-warning: #F59E0B; /* Amber 500 */
+  --color-danger: #EF4444; /* Red 500 */
+  --color-info: #3B82F6; /* Blue 500 */
   
-  --color-bg: #0A0A0F;
-  --color-surface: #13131A;
-  --color-border: #1E1E2E;
+  --color-bg: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-border: var(--theme-border);
   
-  --color-text-primary: #E8E8F0;
-  --color-text-muted: #6B6B8A;
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-muted: var(--theme-text-muted);
   
   --font-sans: "Inter", "Roboto", sans-serif;
 }
 
 @layer base {
+  :root {
+    --theme-bg: #F8FAFC; /* Clean, fresh slate-50 */
+    --theme-surface: #FFFFFF;
+    --theme-border: #E2E8F0; /* Slate 200 */
+    --theme-text-primary: #0F172A; /* Luxurious dark slate 900 */
+    --theme-text-muted: #64748B; /* Slate 500 */
+  }
+  
+  .dark {
+    --theme-bg: #09090B; /* Deep elegant zinc 950 */
+    --theme-surface: #18181B; /* Zinc 900 */
+    --theme-border: #27272A; /* Zinc 800 */
+    --theme-text-primary: #FAFAFA; /* Crisp white */
+    --theme-text-muted: #A1A1AA; /* Zinc 400 */
+  }
+
   body {
-    @apply bg-[var(--color-bg)] text-[var(--color-text-primary)] font-sans antialiased;
+    @apply bg-bg text-text-primary font-sans antialiased;
+  }
+
+  /* Smooth transition for theme switching */
+  *, *::before, *::after {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
 }

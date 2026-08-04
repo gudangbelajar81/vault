@@ -132,83 +132,80 @@ export const ApiKeys = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">API Key Manager</h2>
-          <p className="text-text-muted text-sm mt-1">Simpan kunci rahasia integrasi aplikasi Anda.</p>
-        </div>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-base font-bold text-text-primary">Pengelola Kunci API</h2>
         <button 
           onClick={() => { setFormData({ id: '', platform: '', apiKey: '', notes: '' }); setIsModalOpen(true); }}
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+          className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
         >
-          <Plus size={18} />
-          New API Key
+          <Plus size={14} />
+          <span className="hidden sm:inline">Kunci API Baru</span>
+          <span className="sm:hidden">Baru</span>
         </button>
       </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={14} />
         <input 
           type="text" 
-          placeholder="Cari API Keys..." 
+          placeholder="Cari Kunci API..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface/50 border border-border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
+          className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
         />
       </div>
 
-      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-hidden backdrop-blur-sm p-4">
+      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-y-auto backdrop-blur-sm p-3">
         {loading ? (
           <div className="flex items-center justify-center h-full text-text-muted">
-            <RefreshCw className="animate-spin" size={24} />
+            <RefreshCw className="animate-spin" size={20} />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center flex-col text-text-muted h-full opacity-50">
-            <Key size={48} className="mb-4" />
-            <p>Belum ada API Key tersimpan.</p>
+          <div className="flex flex-col items-center justify-center text-text-muted py-10 opacity-50">
+            <Key size={32} className="mb-2" />
+            <p className="text-xs">Belum ada Kunci API.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredItems.map(item => (
-              <div key={item.id} className="bg-surface border border-border rounded-xl p-4 hover:border-primary/50 transition-colors group relative">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
-                      <Key size={20} />
+              <div key={item.id} className="bg-surface border border-border rounded-lg p-3 hover:border-primary/50 transition-colors group relative">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-md bg-primary/20 text-primary flex items-center justify-center">
+                      <Key size={14} />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold">{item.title}</h3>
-                      <p className="text-xs text-text-muted">API Key</p>
+                      <h3 className="text-white font-semibold text-sm leading-tight">{item.title}</h3>
                     </div>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                    <button onClick={() => openEdit(item)} className="text-text-muted hover:text-white"><MoreVertical size={16}/></button>
-                    <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-danger/80"><X size={16}/></button>
+                  <div className="flex gap-1">
+                    <button onClick={() => openEdit(item)} className="text-text-muted hover:text-white p-1"><MoreVertical size={14}/></button>
+                    <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-danger/80 p-1"><X size={14}/></button>
                   </div>
                 </div>
 
-                <div className="bg-black/40 rounded-lg p-3 flex items-center justify-between mb-3 border border-border/50">
-                  <span className="font-mono text-sm text-text-muted truncate mr-2">
-                    {showKey[item.id] ? item.decryptedData?.apiKey : '••••••••••••••••••••••••'}
+                <div className="bg-black/40 rounded-md p-2 flex items-center justify-between mb-2 border border-border/50">
+                  <span className="font-mono text-xs text-text-muted truncate mr-2">
+                    {showKey[item.id] ? item.decryptedData?.apiKey : '••••••••••••••••'}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 shrink-0">
                     <button 
                       onClick={() => setShowKey({ ...showKey, [item.id]: !showKey[item.id] })}
-                      className="text-text-muted hover:text-white"
+                      className="text-text-muted hover:text-white p-1"
                     >
-                      {showKey[item.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showKey[item.id] ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                     <button 
                       onClick={() => copyToClipboard(item.decryptedData?.apiKey || '')}
-                      className="text-text-muted hover:text-primary"
+                      className="text-text-muted hover:text-primary p-1"
                     >
-                      <Copy size={16} />
+                      <Copy size={14} />
                     </button>
                   </div>
                 </div>
                 
                 {item.decryptedData?.notes && (
-                  <p className="text-xs text-text-muted line-clamp-2">{item.decryptedData.notes}</p>
+                  <p className="text-[10px] text-text-muted line-clamp-1">{item.decryptedData.notes}</p>
                 )}
               </div>
             ))}
@@ -217,50 +214,50 @@ export const ApiKeys = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111116] border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">{formData.id ? 'Edit API Key' : 'Tambah API Key'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
-                <X size={22} />
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-3 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">{formData.id ? 'Edit API Key' : 'Tambah API Key'}</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors">
+                <X size={16} />
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
+            <form onSubmit={handleSave} className="p-3 flex flex-col gap-2">
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Platform (Contoh: OpenAI, Stripe)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Platform (Contoh: OpenAI, Stripe)</label>
                 <input 
                   type="text" required value={formData.platform}
                   onChange={e => setFormData({...formData, platform: e.target.value})}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Secret API Key</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Secret API Key</label>
                 <div className="relative">
                   <input 
                     type="password" required value={formData.apiKey}
                     onChange={e => setFormData({...formData, apiKey: e.target.value})}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-sm"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 pr-8 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-xs"
                   />
-                  <Shield className="absolute right-4 top-1/2 -translate-y-1/2 text-success" size={18} />
+                  <Shield className="absolute right-2 top-1/2 -translate-y-1/2 text-success" size={14} />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Catatan Tambahan (Opsional)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Catatan Tambahan (Opsional)</label>
                 <textarea 
                   value={formData.notes}
                   onChange={e => setFormData({...formData, notes: e.target.value})}
                   rows={2}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium">Batal</button>
-                <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md">
+              <div className="flex justify-end gap-2 mt-2">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs">Batal</button>
+                <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md text-xs">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>

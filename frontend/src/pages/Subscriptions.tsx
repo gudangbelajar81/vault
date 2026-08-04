@@ -137,118 +137,108 @@ export const Subscriptions = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">Subscription Tracker</h2>
-          <p className="text-text-muted text-sm mt-1">Pantau semua langganan & tagihan Anda.</p>
-        </div>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-base font-bold text-text-primary">Subscriptions</h2>
         <button
           onClick={openAdd}
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+          className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
         >
-          <Plus size={18} /> New Subscription
+          <Plus size={14} /> <span className="hidden sm:inline">New Subscription</span><span className="sm:hidden">Baru</span>
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-surface/50 border border-border rounded-xl p-5 backdrop-blur-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center text-primary">
-              <CreditCard size={20} />
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-surface/50 border border-border rounded-lg p-2 md:p-3 backdrop-blur-sm flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-primary/15 flex items-center justify-center text-primary">
+              <CreditCard size={12} />
             </div>
-            <span className="text-sm text-text-muted font-medium">Total Aktif</span>
+            <span className="text-[10px] md:text-xs text-text-muted font-medium truncate">Aktif</span>
           </div>
-          <p className="text-3xl font-black text-text-primary">{activeItems.length}</p>
-          <p className="text-xs text-text-muted mt-1">langganan berjalan</p>
+          <p className="text-sm md:text-base font-black text-text-primary">{activeItems.length}</p>
         </div>
 
-        <div className="bg-surface/50 border border-border rounded-xl p-5 backdrop-blur-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center text-success">
-              <TrendingUp size={20} />
+        <div className="bg-surface/50 border border-border rounded-lg p-2 md:p-3 backdrop-blur-sm flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-success/15 flex items-center justify-center text-success">
+              <TrendingUp size={12} />
             </div>
-            <span className="text-sm text-text-muted font-medium">Pengeluaran/Bulan</span>
+            <span className="text-[10px] md:text-xs text-text-muted font-medium truncate">Pengeluaran</span>
           </div>
-          <p className="text-2xl font-black text-text-primary">{formatCurrency(totalMonthly, 'IDR')}</p>
-          <p className="text-xs text-text-muted mt-1">estimasi bulanan</p>
+          <p className="text-sm md:text-base font-black text-text-primary truncate">{formatCurrency(totalMonthly, 'IDR')}</p>
         </div>
 
-        <div className={`bg-surface/50 border rounded-xl p-5 backdrop-blur-sm ${dueThisWeek > 0 ? 'border-warning/50 bg-warning/5' : 'border-border'}`}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${dueThisWeek > 0 ? 'bg-warning/15 text-warning' : 'bg-info/15 text-info'}`}>
-              <AlertCircle size={20} />
+        <div className={`bg-surface/50 border rounded-lg p-2 md:p-3 backdrop-blur-sm flex flex-col justify-center ${dueThisWeek > 0 ? 'border-warning/50 bg-warning/5' : 'border-border'}`}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className={`w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center ${dueThisWeek > 0 ? 'bg-warning/15 text-warning' : 'bg-info/15 text-info'}`}>
+              <AlertCircle size={12} />
             </div>
-            <span className="text-sm text-text-muted font-medium">Jatuh Tempo</span>
+            <span className="text-[10px] md:text-xs text-text-muted font-medium truncate">Tempo (7h)</span>
           </div>
-          <p className="text-3xl font-black text-text-primary">{dueThisWeek}</p>
-          <p className="text-xs text-text-muted mt-1">dalam 7 hari ke depan</p>
+          <p className="text-sm md:text-base font-black text-text-primary">{dueThisWeek}</p>
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-hidden backdrop-blur-sm">
+      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-y-auto backdrop-blur-sm">
         {loading ? (
           <div className="flex items-center justify-center h-full text-text-muted">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
           </div>
         ) : items.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center flex-col text-text-muted py-20">
-            <CreditCard size={48} className="mb-4 opacity-30" />
-            <p className="font-semibold">Belum ada langganan.</p>
-            <p className="text-sm mt-1">Tambahkan langganan pertama Anda.</p>
+          <div className="flex flex-col items-center justify-center text-text-muted py-10 opacity-50">
+            <CreditCard size={32} className="mb-2" />
+            <p className="text-xs font-semibold">Belum ada langganan.</p>
           </div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Layanan</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Harga</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Tagihan Berikutnya</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider">Aksi</th>
+                <th className="px-3 py-2 text-left text-[10px] font-semibold text-text-muted uppercase tracking-wider">Layanan</th>
+                <th className="px-3 py-2 text-left text-[10px] font-semibold text-text-muted uppercase tracking-wider">Harga</th>
+                <th className="px-3 py-2 text-left text-[10px] font-semibold text-text-muted uppercase tracking-wider hidden sm:table-cell">Tagihan Berikutnya</th>
+                <th className="px-3 py-2 text-left text-[10px] font-semibold text-text-muted uppercase tracking-wider hidden sm:table-cell">Status</th>
+                <th className="px-3 py-2 text-right text-[10px] font-semibold text-text-muted uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {items.map((item) => {
                 const days = getDaysUntil(item.nextBillingDate);
                 return (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center font-black text-white text-sm">
+                  <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-md bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center font-black text-white text-[10px]">
                           {item.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-text-primary">{item.name}</p>
-                          <p className="text-xs text-text-muted capitalize">{item.billingCycle === 'monthly' ? 'Bulanan' : 'Tahunan'}</p>
+                          <p className="font-semibold text-text-primary text-xs">{item.name}</p>
+                          <p className="text-[10px] text-text-muted capitalize">{item.billingCycle === 'monthly' ? 'Bln' : 'Thn'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-text-primary">{formatCurrency(item.price, item.currency)}</p>
-                      <p className="text-xs text-text-muted">/{item.billingCycle === 'monthly' ? 'bln' : 'thn'}</p>
+                    <td className="px-3 py-2">
+                      <p className="font-bold text-text-primary text-xs">{formatCurrency(item.price, item.currency)}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-text-primary">{new Date(item.nextBillingDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <td className="px-3 py-2 hidden sm:table-cell">
+                      <p className="text-xs text-text-primary">{new Date(item.nextBillingDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
                       <div className="mt-0.5">{getDueBadge(days, item.status)}</div>
                     </td>
-                    <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-3 py-2 hidden sm:table-cell">{getStatusBadge(item.status)}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(item)}
-                          className="p-2 text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                          title="Edit"
+                          className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded transition-colors"
                         >
-                          <Edit2 size={15} />
+                          <Edit2 size={12} />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id, item.name)}
-                          className="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-                          title="Hapus"
+                          className="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded transition-colors"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={12} />
                         </button>
                       </div>
                     </td>
@@ -262,99 +252,99 @@ export const Subscriptions = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111116] border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">{editId ? 'Edit Langganan' : 'Tambah Langganan'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-white transition-colors"><X size={22} /></button>
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-3 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">{editId ? 'Edit Langganan' : 'Tambah Langganan'}</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors"><X size={16} /></button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
+            <form onSubmit={handleSave} className="p-3 flex flex-col gap-2">
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Nama Layanan *</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Nama Layanan *</label>
                 <input
                   type="text" required value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Netflix, Spotify, ChatGPT Plus..."
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Harga</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Harga</label>
                   <input
                     type="number" value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                     placeholder="0"
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Mata Uang</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Mata Uang</label>
                   <select
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   >
-                    <option value="IDR">IDR (Rupiah)</option>
-                    <option value="USD">USD (Dollar)</option>
+                    <option value="IDR">IDR</option>
+                    <option value="USD">USD</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Siklus Tagihan</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Siklus</label>
                   <select
                     value={formData.billingCycle}
                     onChange={(e) => setFormData({ ...formData, billingCycle: e.target.value })}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   >
                     <option value="monthly">Bulanan</option>
                     <option value="yearly">Tahunan</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Status</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   >
                     <option value="active">Aktif</option>
                     <option value="paused">Dijeda</option>
-                    <option value="cancelled">Dibatalkan</option>
+                    <option value="cancelled">Batal</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Tagihan Berikutnya</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Tagihan Berikutnya</label>
                 <input
                   type="date" value={formData.nextBillingDate}
                   onChange={(e) => setFormData({ ...formData, nextBillingDate: e.target.value })}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Email Akun (Untuk Pemetaan / Jalan Pintas)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Email Akun</label>
                 <input
                   type="email" value={formData.accountEmail}
                   onChange={(e) => setFormData({ ...formData, accountEmail: e.target.value })}
                   placeholder="bos@gmail.com"
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 mt-2">
+              <div className="flex justify-end gap-2 mt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium">
+                  className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs">
                   Batal
                 </button>
                 <button type="submit" disabled={saving || !formData.name}
-                  className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md">
+                  className="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md text-xs">
                   {saving ? 'Menyimpan...' : (editId ? 'Perbarui' : 'Simpan')}
                 </button>
               </div>

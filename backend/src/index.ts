@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import vaultRoutes from './routes/vault';
 import subscriptionRoutes from './routes/subscriptions';
+import licenseManagerRoutes from './routes/licenseManager';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api', licenseManagerRoutes);
 
 // Global Error Boundary (Halaman 500)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -170,11 +170,16 @@ export const IdentityMap = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-          <Network className="text-primary" /> Jalan Pintas (Peta Identitas)
-        </h2>
-        <p className="text-text-muted text-sm mt-1">Lihat dan kelola keterhubungan akun, langganan, dan kursus berdasarkan email.</p>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <div className="h-6 w-6 rounded-md bg-primary/20 text-primary flex items-center justify-center shrink-0">
+             <Network size={14} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-text-primary leading-tight">Peta Identitas</h2>
+            <p className="text-[10px] text-text-muted leading-tight">Kelola keterhubungan akun</p>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-y-auto p-6 backdrop-blur-sm">
@@ -195,30 +200,30 @@ export const IdentityMap = () => {
                   <div className="h-8 w-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
                     <Mail size={16} />
                   </div>
-                  <span className="font-bold text-white tracking-wide">{email}</span>
+                  <span className="font-bold text-text-primary tracking-wide">{email}</span>
                   <span className="bg-border text-text-muted text-xs px-2 py-0.5 rounded-full ml-2">{children.length} terhubung</span>
                 </div>
 
                 {/* Branches */}
                 <div className="ml-8 mt-2 flex flex-col gap-3 border-l-2 border-border/50 pl-6 py-2 relative">
                   {children.map((child, idx) => (
-                    <div key={child.id} className="relative group flex items-center justify-between bg-black/40 border border-border/50 rounded-lg px-4 py-2.5 w-full max-w-2xl hover:border-primary/50 hover:bg-white/5 transition-all">
+                    <div key={child.id} className="relative group flex items-center justify-between bg-black/5 dark:bg-black/40 border border-border/50 rounded-lg px-4 py-2.5 w-full max-w-2xl hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 transition-all">
                       {/* Horizontal connecting line */}
                       <div className="absolute -left-6 top-1/2 w-6 border-t-2 border-border/50 -translate-y-1/2"></div>
                       
                       <div className="flex items-center gap-3">
-                        <div className="h-6 w-6 rounded-md bg-white/5 flex items-center justify-center">
+                        <div className="h-6 w-6 rounded-md bg-black/5 dark:bg-white/5 flex items-center justify-center">
                           {getIcon(child.type)}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">{child.title}</p>
+                          <p className="text-sm font-semibold text-text-primary">{child.title}</p>
                           <p className="text-[10px] text-text-muted uppercase tracking-wider">{child.type}</p>
                         </div>
                       </div>
 
                       {/* Actions */}
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(child)} className="p-1.5 text-text-muted hover:text-white bg-surface rounded-md border border-border"><Edit2 size={14} /></button>
+                        <button onClick={() => openEdit(child)} className="p-1.5 text-text-muted hover:text-text-primary bg-surface rounded-md border border-border"><Edit2 size={14} /></button>
                         <button onClick={() => handleDelete(child)} className="p-1.5 text-danger hover:bg-danger/10 bg-surface rounded-md border border-border"><Trash2 size={14} /></button>
                       </div>
                     </div>
@@ -232,11 +237,11 @@ export const IdentityMap = () => {
 
       {/* Unified Edit Modal */}
       {editItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setEditItem(null) }}>
-          <div className="bg-[#111116] border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setEditItem(null) }}>
+          <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">Edit {editItem.title}</h3>
-              <button onClick={() => setEditItem(null)} className="text-text-muted hover:text-white transition-colors"><X size={22} /></button>
+              <h3 className="text-xl font-bold text-text-primary">Edit {editItem.title}</h3>
+              <button onClick={() => setEditItem(null)} className="text-text-muted hover:text-text-primary transition-colors"><X size={22} /></button>
             </div>
             
             <form onSubmit={handleSave} className="p-6 flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
@@ -246,15 +251,15 @@ export const IdentityMap = () => {
                 <>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Nama Layanan</label>
-                    <input type="text" value={editFormData.name || ''} onChange={e => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="text" value={editFormData.name || ''} onChange={e => setEditFormData({...editFormData, name: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Harga</label>
-                    <input type="number" value={editFormData.price || ''} onChange={e => setEditFormData({...editFormData, price: e.target.value ? parseFloat(e.target.value) : ''})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="number" value={editFormData.price || ''} onChange={e => setEditFormData({...editFormData, price: e.target.value ? parseFloat(e.target.value) : ''})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Email Akun</label>
-                    <input type="email" value={editFormData.accountEmail || ''} onChange={e => setEditFormData({...editFormData, accountEmail: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="email" value={editFormData.accountEmail || ''} onChange={e => setEditFormData({...editFormData, accountEmail: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                 </>
               )}
@@ -263,25 +268,25 @@ export const IdentityMap = () => {
                 <>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Judul / Platform</label>
-                    <input type="text" value={editFormData.title || ''} onChange={e => setEditFormData({...editFormData, title: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="text" value={editFormData.title || ''} onChange={e => setEditFormData({...editFormData, title: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Username / Email</label>
-                    <input type="text" value={editFormData.username || ''} onChange={e => setEditFormData({...editFormData, username: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="text" value={editFormData.username || ''} onChange={e => setEditFormData({...editFormData, username: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">Password</label>
-                    <input type="text" value={editFormData.password || ''} onChange={e => setEditFormData({...editFormData, password: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="text" value={editFormData.password || ''} onChange={e => setEditFormData({...editFormData, password: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                   <div>
                     <label className="text-sm text-text-muted mb-1 block">URL (Opsional)</label>
-                    <input type="text" value={editFormData.url || ''} onChange={e => setEditFormData({...editFormData, url: e.target.value})} className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white" />
+                    <input type="text" value={editFormData.url || ''} onChange={e => setEditFormData({...editFormData, url: e.target.value})} className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary" />
                   </div>
                 </>
               )}
 
               <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setEditItem(null)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium">Batal</button>
+                <button type="button" onClick={() => setEditItem(null)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium">Batal</button>
                 <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 font-medium shadow-md">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>

@@ -59,18 +59,18 @@ export const Auth = () => {
       <div className="p-3 md:p-8 rounded-2xl bg-surface/50 border border-border backdrop-blur-xl max-w-md w-full shadow-[0_0_40px_rgba(var(--color-primary),0.1)]">
         
         {/* Toggle Login/Register */}
-        <div className="flex bg-black/40 rounded-lg p-0.5 md:p-1 mb-3 md:mb-6 border border-border">
+        <div className="flex bg-black/5 dark:bg-black/40 rounded-lg p-0.5 md:p-1 mb-3 md:mb-6 border border-border">
           <button 
             type="button"
             onClick={() => setIsRegister(false)}
-            className={`flex-1 py-1.5 md:py-2 text-[11px] md:text-sm font-bold rounded-md transition-colors ${!isRegister ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-white'}`}
+            className={`flex-1 py-1.5 md:py-2 text-[11px] md:text-sm font-bold rounded-md transition-colors ${!isRegister ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-text-primary'}`}
           >
             Login
           </button>
           <button 
             type="button"
             onClick={() => setIsRegister(true)}
-            className={`flex-1 py-1.5 md:py-2 text-[11px] md:text-sm font-bold rounded-md transition-colors ${isRegister ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-white'}`}
+            className={`flex-1 py-1.5 md:py-2 text-[11px] md:text-sm font-bold rounded-md transition-colors ${isRegister ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-text-primary'}`}
           >
             Register
           </button>
@@ -84,7 +84,7 @@ export const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-black/40 border border-border rounded-lg px-2.5 py-1 md:px-4 md:py-3 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2.5 py-1 md:px-4 md:py-3 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="you@example.com"
             />
           </div>
@@ -95,7 +95,7 @@ export const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-black/40 border border-border rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="••••••••"
             />
             <button 
@@ -118,7 +118,7 @@ export const Auth = () => {
               value={masterPassword}
               onChange={(e) => setMasterPasswordLocal(e.target.value)}
               required
-              className="w-full bg-black/40 border border-primary/50 rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-black/5 dark:bg-black/40 border border-primary/50 rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="Kunci Utama Vault..."
             />
             <button 

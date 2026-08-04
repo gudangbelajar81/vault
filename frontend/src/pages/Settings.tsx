@@ -176,7 +176,7 @@ export const Settings = () => {
               <Key size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Ganti Master Password</h3>
+              <h3 className="text-lg font-bold text-text-primary">Ganti Master Password</h3>
               <p className="text-xs text-text-muted">Enkripsi ulang seluruh isi brankas</p>
             </div>
           </div>
@@ -201,7 +201,7 @@ export const Settings = () => {
               <input 
                 type="password" required value={oldPassword}
                 onChange={e => setOldPassword(e.target.value)}
-                className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
             </div>
             <div>
@@ -209,7 +209,7 @@ export const Settings = () => {
               <input 
                 type="password" required minLength={8} value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
             </div>
             <div>
@@ -217,7 +217,7 @@ export const Settings = () => {
               <input 
                 type="password" required minLength={8} value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full bg-black/40 border border-border rounded-lg px-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
             </div>
 
@@ -249,14 +249,14 @@ export const Settings = () => {
                 <HardDrive size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Backup & Export</h3>
+                <h3 className="text-lg font-bold text-text-primary">Backup & Export</h3>
                 <p className="text-xs text-text-muted">Unduh seluruh isi brankas dalam format terdekripsi</p>
               </div>
             </div>
 
             <p className="text-sm text-text-muted mb-6">
               Amankan salinan lokal (offline) dari seluruh password dan kunci Anda. 
-              Data akan diunduh dalam kondisi <strong className="text-white">SUDAH TERDEKRIPSI</strong> (bisa dibaca). 
+              Data akan diunduh dalam kondisi <strong className="text-text-primary">SUDAH TERDEKRIPSI</strong> (bisa dibaca). 
               Simpan file hasil unduhan di tempat yang sangat aman.
             </p>
 
@@ -264,7 +264,7 @@ export const Settings = () => {
               <button 
                 onClick={() => handleExport('csv')}
                 disabled={exporting}
-                className="flex-1 bg-surface hover:bg-white/5 border border-border text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="flex-1 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-border text-text-primary px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
                 <Download size={18} />
                 Export CSV
@@ -272,7 +272,7 @@ export const Settings = () => {
               <button 
                 onClick={() => handleExport('json')}
                 disabled={exporting}
-                className="flex-1 bg-surface hover:bg-white/5 border border-border text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="flex-1 bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-border text-text-primary px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
               >
                 <Download size={18} />
                 Export JSON

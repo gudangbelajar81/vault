@@ -124,32 +124,38 @@ export const Shortcuts = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">Quick Access Hub</h2>
-          <p className="text-text-muted text-sm mt-1">Bookmark tautan penting Anda untuk akses cepat.</p>
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center gap-1.5">
+          <div className="h-6 w-6 rounded-md bg-primary/20 text-primary flex items-center justify-center shrink-0">
+             <Globe size={14} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-text-primary leading-tight">Pusat Akses Cepat</h2>
+            <p className="text-[10px] text-text-muted leading-tight">Bookmark tautan penting</p>
+          </div>
         </div>
         <button 
           onClick={() => { setFormData({ id: '', title: '', url: '', description: '' }); setIsModalOpen(true); }}
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+          className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-transform active:scale-95 shadow-md text-xs"
         >
-          <Plus size={18} />
-          New Shortcut
+          <Plus size={14} />
+          <span className="hidden sm:inline">Jalan Pintas Baru</span>
+          <span className="sm:hidden">Baru</span>
         </button>
       </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={14} />
         <input 
           type="text" 
           placeholder="Cari shortcut..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface/50 border border-border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
+          className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
         />
       </div>
 
-      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-hidden backdrop-blur-sm p-4">
+      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-hidden backdrop-blur-sm p-3">
         {loading ? (
           <div className="flex items-center justify-center h-full text-text-muted">
             <RefreshCw className="animate-spin" size={24} />
@@ -166,15 +172,15 @@ export const Shortcuts = () => {
                    onClick={() => window.open(item.decryptedData?.url?.startsWith('http') ? item.decryptedData.url : `https://${item.decryptedData?.url}`, '_blank')}
               >
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
-                  <button onClick={(e) => { e.stopPropagation(); openEdit(item); }} className="p-1.5 bg-black/60 rounded-md text-text-muted hover:text-white backdrop-blur-md"><MoreVertical size={14}/></button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="p-1.5 bg-black/60 rounded-md text-danger hover:text-danger/80 backdrop-blur-md"><X size={14}/></button>
+                  <button onClick={(e) => { e.stopPropagation(); openEdit(item); }} className="p-1.5 bg-surface rounded-md text-text-muted hover:text-text-primary backdrop-blur-md"><MoreVertical size={14}/></button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="p-1.5 bg-surface rounded-md text-danger hover:text-danger/80 backdrop-blur-md"><X size={14}/></button>
                 </div>
 
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                   <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner">
                     <Globe size={28} />
                   </div>
-                  <h3 className="text-white font-semibold text-lg line-clamp-1">{item.title}</h3>
+                  <h3 className="text-text-primary font-semibold text-lg line-clamp-1">{item.title}</h3>
                   {item.decryptedData?.description && (
                     <p className="text-xs text-text-muted mt-2 line-clamp-2">{item.decryptedData.description}</p>
                   )}
@@ -186,11 +192,11 @@ export const Shortcuts = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setIsModalOpen(false) }}>
-          <div className="bg-[#111116] border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setIsModalOpen(false) }}>
+          <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">{formData.id ? 'Edit Shortcut' : 'Tambah Shortcut'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
+              <h3 className="text-xl font-bold text-text-primary">{formData.id ? 'Edit Shortcut' : 'Tambah Shortcut'}</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -201,7 +207,7 @@ export const Shortcuts = () => {
                 <input 
                   type="text" required value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
@@ -211,7 +217,7 @@ export const Shortcuts = () => {
                   type="url" required value={formData.url}
                   onChange={e => setFormData({...formData, url: e.target.value})}
                   placeholder="https://example.com"
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
@@ -221,12 +227,12 @@ export const Shortcuts = () => {
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
                   rows={2}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
               </div>
 
               <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium">Batal</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium">Batal</button>
                 <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>

@@ -9,6 +9,8 @@ import { Courses } from './pages/Courses';
 import { Shortcuts } from './pages/Shortcuts';
 import { Settings } from './pages/Settings';
 import { IdentityMap } from './pages/IdentityMap';
+import { LicenseManager } from './pages/LicenseManager';
+import { AccessLayout } from './pages/AccessLayout';
 import { useVaultStore } from './store/vaultStore';
 
 import { Toaster } from 'react-hot-toast';
@@ -31,9 +33,9 @@ function App() {
         position="top-center" 
         toastOptions={{
           style: {
-            background: '#111116',
-            color: '#fff',
-            border: '1px solid #2a2a35',
+            background: 'var(--theme-surface)',
+            color: 'var(--theme-text-primary)',
+            border: '1px solid var(--theme-border)',
             fontSize: '14px',
             borderRadius: '12px'
           },
@@ -51,12 +53,17 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/vault" element={<Vault />} />
-          <Route path="/api-keys" element={<ApiKeys />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/courses" element={<Courses />} />
+          {/* Grouped Access Routes */}
+          <Route element={<AccessLayout />}>
+            <Route path="/vault" element={<Vault />} />
+            <Route path="/api-keys" element={<ApiKeys />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/courses" element={<Courses />} />
+          </Route>
+          
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/identity-map" element={<IdentityMap />} />
+          <Route path="/licenses" element={<LicenseManager />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

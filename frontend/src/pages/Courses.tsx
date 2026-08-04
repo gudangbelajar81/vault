@@ -136,85 +136,82 @@ export const Courses = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">Course Tracker</h2>
-          <p className="text-text-muted text-sm mt-1">Kelola akses platform e-course pembelajaran Anda.</p>
-        </div>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-base font-bold text-text-primary">Course Tracker</h2>
         <button 
           onClick={() => { setFormData({ id: '', platform: '', url: '', username: '', password: '', notes: '' }); setIsModalOpen(true); }}
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-transform active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+          className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
         >
-          <Plus size={18} />
-          Add Course
+          <Plus size={14} />
+          <span className="hidden sm:inline">Add Course</span>
+          <span className="sm:hidden">Baru</span>
         </button>
       </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={14} />
         <input 
           type="text" 
           placeholder="Cari kursus..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface/50 border border-border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
+          className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted/50 backdrop-blur-sm"
         />
       </div>
 
-      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-hidden backdrop-blur-sm p-4">
+      <div className="flex-1 bg-surface/30 border border-border rounded-xl overflow-y-auto backdrop-blur-sm p-3">
         {loading ? (
           <div className="flex items-center justify-center h-full text-text-muted">
-            <RefreshCw className="animate-spin" size={24} />
+            <RefreshCw className="animate-spin" size={20} />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center flex-col text-text-muted h-full opacity-50">
-            <GraduationCap size={48} className="mb-4" />
-            <p>Belum ada akses kursus tersimpan.</p>
+          <div className="flex flex-col items-center justify-center text-text-muted py-10 opacity-50">
+            <GraduationCap size={32} className="mb-2" />
+            <p className="text-xs">Belum ada akses kursus.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredItems.map(item => (
-              <div key={item.id} className="bg-surface border border-border rounded-xl p-5 hover:border-primary/50 transition-colors group relative flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 text-white flex items-center justify-center">
-                      <BookOpen size={24} className="text-secondary" />
+              <div key={item.id} className="bg-surface border border-border rounded-lg p-3 hover:border-primary/50 transition-colors group relative flex flex-col">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary/20 to-secondary/20 text-white flex items-center justify-center">
+                      <BookOpen size={14} className="text-secondary" />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold text-lg">{item.title}</h3>
-                      <p className="text-xs text-text-muted">E-Learning Platform</p>
+                      <h3 className="text-text-primary font-semibold text-sm leading-tight">{item.title}</h3>
                     </div>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                    <button onClick={() => openEdit(item)} className="text-text-muted hover:text-white"><MoreVertical size={16}/></button>
-                    <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-danger/80"><X size={16}/></button>
+                  <div className="flex gap-1">
+                    <button onClick={() => openEdit(item)} className="text-text-muted hover:text-text-primary p-1"><MoreVertical size={14}/></button>
+                    <button onClick={() => handleDelete(item.id)} className="text-danger hover:text-danger/80 p-1"><X size={14}/></button>
                   </div>
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex flex-col gap-2 mb-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-text-muted">Username</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white">{item.decryptedData?.username || '-'}</span>
+                  <div className="flex flex-col gap-1 mb-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-text-muted text-[10px]">User</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-text-primary truncate max-w-[120px]">{item.decryptedData?.username || '-'}</span>
                         {item.decryptedData?.username && (
-                           <button onClick={() => copyToClipboard(item.decryptedData?.username)} className="text-text-muted hover:text-primary"><Copy size={14}/></button>
+                           <button onClick={() => copyToClipboard(item.decryptedData?.username)} className="text-text-muted hover:text-primary"><Copy size={12}/></button>
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-text-muted">Password</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white">••••••••</span>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-text-muted text-[10px]">Pass</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-text-primary">••••••••</span>
                         {item.decryptedData?.password && (
-                           <button onClick={() => copyToClipboard(item.decryptedData?.password)} className="text-text-muted hover:text-primary"><Copy size={14}/></button>
+                           <button onClick={() => copyToClipboard(item.decryptedData?.password)} className="text-text-muted hover:text-primary"><Copy size={12}/></button>
                         )}
                       </div>
                     </div>
                   </div>
                   
                   {item.decryptedData?.notes && (
-                    <div className="text-xs text-text-muted bg-black/30 p-2 rounded-lg line-clamp-2 mb-4">
+                    <div className="text-[10px] text-text-muted bg-black/5 dark:bg-black/30 p-1.5 rounded line-clamp-1 mb-2">
                       {item.decryptedData.notes}
                     </div>
                   )}
@@ -224,9 +221,9 @@ export const Courses = () => {
                   <a 
                     href={item.decryptedData.url.startsWith('http') ? item.decryptedData.url : `https://${item.decryptedData.url}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="w-full bg-primary/10 hover:bg-primary/20 text-primary py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium mt-auto"
+                    className="w-full bg-primary/10 hover:bg-primary/20 text-primary py-1.5 rounded border border-primary/20 flex items-center justify-center gap-1.5 transition-colors text-[10px] font-medium mt-auto"
                   >
-                    <ExternalLink size={16} /> Buka Platform
+                    <ExternalLink size={10} /> Buka
                   </a>
                 )}
               </div>
@@ -236,67 +233,67 @@ export const Courses = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111116] border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-border">
-              <h3 className="text-xl font-bold text-white">{formData.id ? 'Edit Akses Kursus' : 'Tambah Akses Kursus'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-white transition-colors">
-                <X size={22} />
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-3 border-b border-border">
+              <h3 className="text-sm font-bold text-text-primary">{formData.id ? 'Edit Akses Kursus' : 'Tambah Akses Kursus'}</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors">
+                <X size={16} />
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
+            <form onSubmit={handleSave} className="p-3 flex flex-col gap-2">
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Platform (Contoh: Udemy, Coursera)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Platform (Contoh: Udemy, Coursera)</label>
                 <input 
                   type="text" required value={formData.platform}
                   onChange={e => setFormData({...formData, platform: e.target.value})}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">URL Login</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">URL Login</label>
                 <input 
                   type="url" value={formData.url}
                   onChange={e => setFormData({...formData, url: e.target.value})}
                   placeholder="https://udemy.com"
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Username / Email</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Username / Email</label>
                   <input 
                     type="text" value={formData.username}
                     onChange={e => setFormData({...formData, username: e.target.value})}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-text-muted mb-1 block">Password</label>
+                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Password</label>
                   <input 
                     type="password" value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
-                    className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-text-muted mb-1 block">Catatan Progress / Lainnya (Opsional)</label>
+                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Catatan Progress / Lainnya (Opsional)</label>
                 <textarea 
                   value={formData.notes}
                   onChange={e => setFormData({...formData, notes: e.target.value})}
                   rows={2}
-                  className="w-full bg-black/40 border border-border rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors font-medium">Batal</button>
-                <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md">
+              <div className="flex justify-end gap-2 mt-2">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs">Batal</button>
+                <button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md text-xs">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>

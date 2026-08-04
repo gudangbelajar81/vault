@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -74,4 +74,38 @@ model Subscription {
   encryptedNotes  String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// LICENSE MANAGER MODELS (Migrated from Railway)
+// ==========================================
+
+model License {
+  id          Int      @id @default(autoincrement())
+  client_name String   @db.VarChar(255)
+  app_code    String   @default("APP_KASIR") @db.VarChar(100)
+  wa_number   String?  @db.VarChar(50)
+  machine_id  String   @db.VarChar(100)
+  tier        String   @default("BASIC") @db.VarChar(50)
+  license_key String   @db.Text
+  created_at  DateTime @default(now())
+}
+
+model Package {
+  id           Int     @id @default(autoincrement())
+  tier_code    String  @unique @db.VarChar(50)
+  display_name String  @db.VarChar(100)
+  price        Int     @default(0)
+  features     String? @db.Text
+}
+
+model Otp {
+  id          Int      @id @default(autoincrement())
+  otp_code    String   @unique @db.VarChar(10)
+  machine_id  String   @db.VarChar(100)
+  app_code    String   @db.VarChar(100)
+  status      String?  @default("pending") @db.VarChar(20)
+  license_key String?  @db.Text
+  created_at  DateTime @default(now())
+  expires_at  DateTime
 }
