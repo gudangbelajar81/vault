@@ -14,7 +14,7 @@ model User {
   id                  String     @id @default(uuid())
   email               String     @unique
   passwordHash        String
-  recoveryCodes       String     @db.Text // JSON stringified array of hashed backup codes
+  recoveryCodes       String      // JSON stringified array of hashed backup codes
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
   deletedAt           DateTime?
@@ -41,7 +41,7 @@ model WebAuthnCredential {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   credentialId  String   @unique
-  publicKey     String   @db.Text
+  publicKey     String   
   deviceName    String?
   lastUsed      DateTime @default(now())
   createdAt     DateTime @default(now())
@@ -53,7 +53,7 @@ model VaultItem {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          String   // password, api, course, shortcut, etc.
   title         String
-  encryptedData String   @db.Text // JSON string containing encrypted fields (username, password, URL, notes)
+  encryptedData String    // JSON string containing encrypted fields (username, password, URL, notes)
   favorite      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -71,7 +71,7 @@ model Subscription {
   nextBillingDate DateTime
   status          String   @default("active") // active, paused, cancelled
   accountEmail    String?  // Untuk relasi ke fitur Jalan Pintas (Mind Map)
-  encryptedNotes  String?  @db.Text
+  encryptedNotes  String?  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -82,30 +82,30 @@ model Subscription {
 
 model License {
   id          Int      @id @default(autoincrement())
-  client_name String   @db.VarChar(255)
-  app_code    String   @default("APP_KASIR") @db.VarChar(100)
-  wa_number   String?  @db.VarChar(50)
-  machine_id  String   @db.VarChar(100)
-  tier        String   @default("BASIC") @db.VarChar(50)
-  license_key String   @db.Text
+  client_name String   
+  app_code    String   @default("APP_KASIR") 
+  wa_number   String?  
+  machine_id  String   
+  tier        String   @default("BASIC") 
+  license_key String   
   created_at  DateTime @default(now())
 }
 
 model Package {
   id           Int     @id @default(autoincrement())
-  tier_code    String  @unique @db.VarChar(50)
-  display_name String  @db.VarChar(100)
+  tier_code    String  @unique 
+  display_name String  
   price        Int     @default(0)
-  features     String? @db.Text
+  features     String? 
 }
 
 model Otp {
   id          Int      @id @default(autoincrement())
-  otp_code    String   @unique @db.VarChar(10)
-  machine_id  String   @db.VarChar(100)
-  app_code    String   @db.VarChar(100)
-  status      String?  @default("pending") @db.VarChar(20)
-  license_key String?  @db.Text
+  otp_code    String   @unique 
+  machine_id  String   
+  app_code    String   
+  status      String?  @default("pending") 
+  license_key String?  
   created_at  DateTime @default(now())
   expires_at  DateTime
 }
