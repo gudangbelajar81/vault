@@ -1,67 +1,99 @@
 import React, { useEffect, useState } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, ShieldCheck } from 'lucide-react';
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
 export const InstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
-      // Show prompt if not already dismissed in this session
-      if (!sessionStorage.getItem('pwa-prompt-dismissed')) {
-        setIsVisible(true);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      
+      // Jangan tampilkan jika pengguna sudah menolak (dismiss) secara permanen
+      const isDismissed = localStorage.getItem('installPromptDismissed');
+      if (!isDismissed) {
+        // Beri sedikit jeda agar tidak terlalu agresif saat baru buka halaman
+        setTimeout(() => setShowPrompt(true), 1500);
       }
     };
-    
+
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
+    
+    // Tampilkan prompt bawaan OS/Browser
     deferredPrompt.prompt();
+    
+    // Tunggu pilihan pengguna
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      setIsVisible(false);
+      setShowPrompt(false);
     }
+    
+    // Prompt hanya bisa dipanggil sekali
     setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
-    setIsVisible(false);
-    sessionStorage.setItem('pwa-prompt-dismissed', 'true');
+    setShowPrompt(false);
+    // Simpan status agar tidak muncul terus-menerus
+    localStorage.setItem('installPromptDismissed', 'true');
   };
 
-  if (!isVisible) return null;
+  if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-surface/90 backdrop-blur-xl border border-primary/30 p-4 rounded-2xl shadow-[0_10px_40px_rgba(var(--color-primary),0.3)] animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="flex items-start gap-4">
-        <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary shrink-0">
-          <Download size={20} />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-bold text-text-primary text-sm">Install VaultPro</h3>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
-            Tambahkan ke layar utama untuk akses lebih cepat dan pengalaman aplikasi layar penuh.
-          </p>
-          <div className="flex gap-2 mt-3">
-            <button 
-              onClick={handleInstall}
-              className="flex-1 bg-primary text-white text-xs font-bold py-2 rounded-lg active:scale-95 transition-transform"
-            >
-              Install Sekarang
-            </button>
-          </div>
-        </div>
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm z-[100] animate-in slide-in-from-bottom-10 fade-in duration-500">
+      <div className="bg-surface/90 backdrop-blur-xl border border-primary/40 p-4 rounded-2xl shadow-[0_8px_30px_rgba(var(--color-primary),0.3)] flex flex-col gap-3">
         <button 
           onClick={handleDismiss}
-          className="text-text-muted hover:text-text-primary p-1 -mt-1 -mr-1"
+          className="absolute top-3 right-3 p-1.5 text-text-muted hover:text-white transition-colors bg-black/20 rounded-full"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
+
+        <div className="flex items-start gap-4">
+          <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-xl shrink-0 shadow-lg relative overflow-hidden">
+             <div className="absolute inset-0 bg-white/20 blur-[2px]"></div>
+             <Download size={24} className="text-white relative z-10" />
+          </div>
+          <div className="flex-1 pr-6">
+            <h3 className="text-[13px] font-black text-text-primary uppercase tracking-wider mb-1 flex items-center gap-1">
+              Pasang Aplikasi <ShieldCheck size={14} className="text-primary" />
+            </h3>
+            <p className="text-[11px] text-text-muted leading-relaxed">
+              Karena Bos gampang lupa URL, pasang VaultPro ke <strong>Layar Utama</strong> HP/PC sekarang. Aman sekelas Enterprise, dan bisa diakses seperti aplikasi Native.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-1">
+          <button 
+            onClick={handleInstall}
+            className="flex-1 bg-primary hover:bg-primary/90 text-white text-[12px] font-bold py-2.5 rounded-xl transition-all active:scale-95 shadow-[0_0_15px_rgba(var(--color-primary),0.4)]"
+          >
+            Install Sekarang
+          </button>
+          <button 
+            onClick={handleDismiss}
+            className="px-4 bg-black/20 hover:bg-black/40 border border-border text-text-muted text-[12px] font-semibold rounded-xl transition-colors"
+          >
+            Nanti Saja
+          </button>
+        </div>
       </div>
     </div>
   );

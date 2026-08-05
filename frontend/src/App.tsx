@@ -12,6 +12,7 @@ import { IdentityMap } from './pages/IdentityMap';
 import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
 import { useVaultStore } from './store/vaultStore';
+import { InstallPrompt } from './components/InstallPrompt';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -29,6 +30,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <>
+      <InstallPrompt />
       <Toaster 
         position="top-center" 
         toastOptions={{
