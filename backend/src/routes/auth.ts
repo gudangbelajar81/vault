@@ -8,7 +8,7 @@ const router = Router();
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
   limit: 5, // Maksimal 5x gagal/coba per IP
-  message: { error: 'Terlalu banyak percobaan login/register, silakan tunggu 15 menit.' },
+  message: { message: 'Terlalu banyak percobaan login/register, silakan tunggu 15 menit.' },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });

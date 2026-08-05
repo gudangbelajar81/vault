@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// WAJIB: Trust Proxy agar secure cookies dan rate-limiter bekerja di balik Nginx/Traefik/Reverse Proxy
+app.set('trust proxy', 1);
+
 // Security: Helmet (Mencegah celah seperti Clickjacking, XSS)
 app.use(helmet());
 
@@ -20,11 +23,16 @@ app.use(helmet());
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
   limit: 1000, // Maksimal 1000 request per 15 menit per IP
-  message: { error: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' },
+  message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
 app.use(globalLimiter);
+
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ message: 'Backend is healthy!' });
+});
 
 // Pintu Tol Komunikasi (CORS) - Standar AlvezaDigital
 app.use(cors({
