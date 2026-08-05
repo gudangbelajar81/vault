@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import vaultRoutes from './routes/vault';
 import subscriptionRoutes from './routes/subscriptions';
@@ -10,6 +12,19 @@ import licenseManagerRoutes from './routes/licenseManager';
 dotenv.config();
 
 const app = express();
+
+// Security: Helmet (Mencegah celah seperti Clickjacking, XSS)
+app.use(helmet());
+
+// Security: Global Rate Limiting (Mencegah serangan DDoS umum)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  limit: 1000, // Maksimal 1000 request per 15 menit per IP
+  message: { error: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
 
 // Pintu Tol Komunikasi (CORS) - Standar AlvezaDigital
 app.use(cors({
