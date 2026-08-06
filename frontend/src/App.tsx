@@ -11,6 +11,7 @@ import { Settings } from './pages/Settings';
 import { IdentityMap } from './pages/IdentityMap';
 import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
+import { Expenses } from './pages/Expenses';
 import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
 
@@ -61,6 +62,7 @@ function App() {
             <Route path="/api-keys" element={<ApiKeys />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/courses" element={<Courses />} />
+            <Route path="/expenses" element={<Expenses />} />
           </Route>
           
           <Route path="/shortcuts" element={<Shortcuts />} />

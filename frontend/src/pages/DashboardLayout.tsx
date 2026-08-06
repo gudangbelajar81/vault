@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon } from 'lucide-react';
+import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
 import { InstallPrompt } from '../components/InstallPrompt';
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/vault', icon: Shield, label: 'Akses Utama' },
   { to: '/shortcuts', icon: Link2, label: 'Shortcuts' },
   { to: '/identity-map', icon: Network, label: 'Identity' },
+  { to: '/expenses', icon: Wallet, label: 'Pengeluaran' },
   { to: '/licenses', icon: Briefcase, label: 'Licenses' },
 ];
 

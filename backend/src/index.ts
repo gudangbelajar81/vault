@@ -9,6 +9,7 @@ import vaultRoutes from './routes/vault';
 import subscriptionRoutes from './routes/subscriptions';
 import licenseManagerRoutes from './routes/licenseManager';
 import webauthnRoutes from './routes/webauthn';
+import expenseRoutes from './routes/expenses';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/webauthn', webauthnRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/expenses', expenseRoutes);
 app.use('/api', licenseManagerRoutes);
 
 // Global Error Boundary (Halaman 500)

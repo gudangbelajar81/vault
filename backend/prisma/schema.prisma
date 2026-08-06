@@ -23,6 +23,7 @@ model User {
   sessions            Session[]
   vaultItems          VaultItem[]
   subscriptions       Subscription[]
+  expenses            Expense[]
   webAuthnCredentials WebAuthnCredential[]
 }
 
@@ -77,6 +78,20 @@ model Subscription {
   encryptedNotes  String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  amount      Float
+  currency    String   @default("IDR")
+  category    String
+  date        DateTime
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // ==========================================
