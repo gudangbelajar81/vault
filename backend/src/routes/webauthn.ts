@@ -78,7 +78,7 @@ router.get('/generate-registration-options', requireAuth, async (req: Request, r
     const options = await generateRegistrationOptions({
       rpName,
       rpID,
-      userID: user.id,
+      userID: Buffer.from(user.id).toString('base64url'),
       userName: user.email,
       // Don't prompt users for their authenticator if they already registered it
       excludeCredentials: userCredentials.map(cred => ({
