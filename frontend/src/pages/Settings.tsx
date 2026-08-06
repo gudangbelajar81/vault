@@ -38,7 +38,7 @@ export const Settings = () => {
     setRegistering(true);
     try {
       // 1. Get options from server
-      const optionsRes = await axios.get(`${API_URL}/api/webauthn/generate-registration-options`, { withCredentials: true });
+      const optionsRes = await axios.get(`${API_URL}/api/webauthn/generate-registration-options?rpID=${window.location.hostname}&origin=${encodeURIComponent(window.location.origin)}`, { withCredentials: true });
       const options = optionsRes.data.data;
 
       // 2. Pass options to browser authenticator
@@ -58,7 +58,9 @@ export const Settings = () => {
       // 3. Send response back to server
       const verificationRes = await axios.post(`${API_URL}/api/webauthn/verify-registration`, {
         response: attResp,
-        deviceName: `Browser on ${navigator.userAgent.split(' ')[0]}` // Simple fallback name
+        deviceName: `Browser on ${navigator.userAgent.split(' ')[0]}`, // Simple fallback name
+        rpID: window.location.hostname,
+        origin: window.location.origin
       }, { withCredentials: true });
 
       if (verificationRes.data.success) {

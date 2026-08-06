@@ -74,7 +74,9 @@ export const Auth = () => {
     try {
       // 1. Generate options
       const optionsRes = await axios.post(`${API_URL}/api/webauthn/generate-authentication-options`, {
-        email: currentEmail
+        email: currentEmail,
+        rpID: window.location.hostname,
+        origin: window.location.origin
       });
       
       // 2. Pass to browser
@@ -90,7 +92,9 @@ export const Auth = () => {
       // 3. Verify
       const verificationRes = await axios.post(`${API_URL}/api/webauthn/verify-authentication`, {
         email: currentEmail,
-        response: asseResp
+        response: asseResp,
+        rpID: window.location.hostname,
+        origin: window.location.origin
       });
 
       if (verificationRes.data.success) {

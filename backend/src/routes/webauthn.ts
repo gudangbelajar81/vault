@@ -21,8 +21,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-ganti-di-produksi'
 
 // Helper to get dynamic origin and RP ID
 const getDomainConfig = (req: Request) => {
-  let rpID = process.env.RP_ID;
-  let origin = process.env.FRONTEND_URL || req.headers.origin;
+  // Prioritize explicitly passed params from frontend
+  let rpID = (req.query.rpID as string) || (req.body.rpID as string) || process.env.RP_ID;
+  let origin = (req.query.origin as string) || (req.body.origin as string) || process.env.FRONTEND_URL || req.headers.origin;
 
   if (!rpID) {
     if (origin) {
