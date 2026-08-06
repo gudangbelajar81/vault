@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,8 +14,8 @@ model User {
   id                  String     @id @default(uuid())
   email               String     @unique
   passwordHash        String
-  recoveryCodes       String      // JSON stringified array of hashed backup codes
-  createdAt           DateTime   @default(now())
+  recoveryCodes       String      @db.Text // JSON stringified array of hashed backup codes
+  createdAt           DateTime    @default(now())
   updatedAt           DateTime   @updatedAt
   deletedAt           DateTime?
 
@@ -41,7 +41,7 @@ model WebAuthnCredential {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   credentialId  String   @unique
-  publicKey     String   
+  publicKey     String   @db.Text
   deviceName    String?
   lastUsed      DateTime @default(now())
   createdAt     DateTime @default(now())
@@ -53,7 +53,7 @@ model VaultItem {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          String   // password, api, course, shortcut, etc.
   title         String
-  encryptedData String    // JSON string containing encrypted fields (username, password, URL, notes)
+  encryptedData String   @db.Text // JSON string containing encrypted fields (username, password, URL, notes)
   favorite      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -71,7 +71,7 @@ model Subscription {
   nextBillingDate DateTime
   status          String   @default("active") // active, paused, cancelled
   accountEmail    String?  // Untuk relasi ke fitur Jalan Pintas (Mind Map)
-  encryptedNotes  String?  
+  encryptedNotes  String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -96,7 +96,7 @@ model Package {
   tier_code    String  @unique 
   display_name String  
   price        Int     @default(0)
-  features     String? 
+  features     String? @db.Text
 }
 
 model Otp {
