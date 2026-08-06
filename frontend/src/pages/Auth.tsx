@@ -38,7 +38,7 @@ export const Auth = () => {
       navigate('/vault');
     } catch (error: any) {
       console.error(error);
-      const errorMessage = error.response?.data?.details || error.response?.data?.message || 'Authentication failed';
+      const errorMessage = error.response?.data?.data?.details || error.response?.data?.message || 'Authentication failed';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
