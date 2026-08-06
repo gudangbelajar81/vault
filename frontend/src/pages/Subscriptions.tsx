@@ -255,8 +255,8 @@ export const Subscriptions = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
+          <div className="bg-surface border border-border w-full max-w-7xl rounded-2xl shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center p-3 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">{editId ? 'Edit Langganan' : 'Tambah Langganan'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors"><X size={16} /></button>
@@ -264,10 +264,12 @@ export const Subscriptions = () => {
 
             <form onSubmit={handleSave} className="p-3 flex flex-col gap-2 max-h-[75vh] overflow-y-auto">
               {formsData.map((formData, index) => (
-                <div key={formData.id} className={`flex flex-col gap-2 ${index > 0 ? 'mt-4 pt-4 border-t border-border/50' : ''}`}>
-                  {formsData.length > 1 && (
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Langganan {index + 1}</span>
+                <div key={formData.id} className={`grid grid-cols-1 lg:grid-cols-12 gap-2 items-start ${index > 0 ? 'mt-4 pt-4 border-t border-border/50 lg:mt-2 lg:pt-2' : ''}`}>
+                  
+                  {/* Header Mobile / Delete Mobile */}
+                  <div className="flex lg:hidden justify-between items-center mb-1">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Langganan {index + 1}</span>
+                    {formsData.length > 1 && (
                       <button 
                         type="button" 
                         onClick={() => setFormsData(formsData.filter((_, i) => i !== index))}
@@ -275,11 +277,11 @@ export const Subscriptions = () => {
                       >
                         <Trash2 size={12} />
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   
-                  <div>
-                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Nama Layanan *</label>
+                  <div className="lg:col-span-2">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Nama Layanan *</label>
                     <input
                       type="text" required value={formData.name}
                       onChange={(e) => {
@@ -287,78 +289,76 @@ export const Subscriptions = () => {
                         newForms[index].name = e.target.value;
                         setFormsData(newForms);
                       }}
-                      placeholder="Netflix, Spotify, ChatGPT Plus..."
+                      placeholder="Netflix, Spotify..."
                       className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Harga</label>
-                      <input
-                        type="number" value={formData.price}
-                        onChange={(e) => {
-                          const newForms = [...formsData];
-                          newForms[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
-                          setFormsData(newForms);
-                        }}
-                        placeholder="0"
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Mata Uang</label>
-                      <select
-                        value={formData.currency}
-                        onChange={(e) => {
-                          const newForms = [...formsData];
-                          newForms[index].currency = e.target.value;
-                          setFormsData(newForms);
-                        }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      >
-                        <option value="IDR">IDR</option>
-                        <option value="USD">USD</option>
-                      </select>
-                    </div>
+                  <div className="lg:col-span-2">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Harga</label>
+                    <input
+                      type="number" value={formData.price}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
+                        setFormsData(newForms);
+                      }}
+                      placeholder="0"
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Siklus</label>
-                      <select
-                        value={formData.billingCycle}
-                        onChange={(e) => {
-                          const newForms = [...formsData];
-                          newForms[index].billingCycle = e.target.value;
-                          setFormsData(newForms);
-                        }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      >
-                        <option value="monthly">Bulanan</option>
-                        <option value="yearly">Tahunan</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Status</label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => {
-                          const newForms = [...formsData];
-                          newForms[index].status = e.target.value;
-                          setFormsData(newForms);
-                        }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      >
-                        <option value="active">Aktif</option>
-                        <option value="paused">Dijeda</option>
-                        <option value="cancelled">Batal</option>
-                      </select>
-                    </div>
+                  <div className="lg:col-span-1">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Mata Uang</label>
+                    <select
+                      value={formData.currency}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].currency = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    >
+                      <option value="IDR">IDR</option>
+                      <option value="USD">USD</option>
+                    </select>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Tagihan Berikutnya</label>
+                  <div className="lg:col-span-1">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Siklus</label>
+                    <select
+                      value={formData.billingCycle}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].billingCycle = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    >
+                      <option value="monthly">Bulanan</option>
+                      <option value="yearly">Tahunan</option>
+                    </select>
+                  </div>
+
+                  <div className="lg:col-span-1">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].status = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    >
+                      <option value="active">Aktif</option>
+                      <option value="paused">Dijeda</option>
+                      <option value="cancelled">Batal</option>
+                    </select>
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Tagihan Berikut</label>
                     <input
                       type="date" value={formData.nextBillingDate}
                       onChange={(e) => {
@@ -370,8 +370,8 @@ export const Subscriptions = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Email Akun</label>
+                  <div className="lg:col-span-2">
+                    <label className={`text-[10px] font-medium text-text-muted mb-0.5 ${index === 0 ? 'block' : 'block lg:hidden'}`}>Email Akun</label>
                     <input
                       type="email" value={formData.accountEmail}
                       onChange={(e) => {
@@ -383,6 +383,22 @@ export const Subscriptions = () => {
                       className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
+                  
+                  {/* Delete Desktop */}
+                  {formsData.length > 1 && (
+                    <div className="hidden lg:flex lg:col-span-1 justify-center items-start h-full">
+                       <div className="flex flex-col items-center">
+                         {index === 0 && <label className="text-[10px] font-medium text-transparent mb-0.5 block">X</label>}
+                         <button 
+                           type="button" 
+                           onClick={() => setFormsData(formsData.filter((_, i) => i !== index))}
+                           className="text-danger hover:bg-danger/10 p-1.5 rounded transition-colors"
+                         >
+                           <Trash2 size={14} />
+                         </button>
+                       </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
