@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Plus, Search, MoreVertical, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload } from 'lucide-react';
+import { Plus, Search, MoreVertical, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -21,13 +21,12 @@ export const Vault = () => {
   // Form State
   const [formData, setFormData] = useState({
     title: '',
-    username: '',
-    password: '',
+    credentials: [{ id: Date.now().toString(), username: '', password: '' }],
     url: '',
     notes: '',
     favorite: false
   });
-  const [showFormPassword, setShowFormPassword] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchItems();
@@ -58,13 +57,31 @@ export const Vault = () => {
     }
   };
 
-  const generatePassword = () => {
+  const generatePassword = (id: string) => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
     let result = '';
     for (let i = 0; i < 16; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setFormData({ ...formData, password: result });
+    setFormData({
+      ...formData,
+      credentials: formData.credentials.map(c => c.id === id ? { ...c, password: result } : c)
+    });
+  };
+
+  const addCredentialRow = () => {
+    setFormData({
+      ...formData,
+      credentials: [...formData.credentials, { id: Date.now().toString(), username: '', password: '' }]
+    });
+  };
+
+  const removeCredentialRow = (id: string) => {
+    if (formData.credentials.length <= 1) return;
+    setFormData({
+      ...formData,
+      credentials: formData.credentials.filter(c => c.id !== id)
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -74,10 +91,11 @@ export const Vault = () => {
     setSaving(true);
     try {
       const dataToEncrypt = JSON.stringify({
-        username: formData.username,
-        password: formData.password,
+        credentials: formData.credentials,
         url: formData.url,
-        notes: formData.notes
+        notes: formData.notes,
+        username: formData.credentials[0]?.username || '',
+        password: formData.credentials[0]?.password || '',
       });
 
       const encryptedData = await encryptData(dataToEncrypt, masterPassword);
@@ -90,7 +108,8 @@ export const Vault = () => {
       }, { withCredentials: true });
 
       setIsModalOpen(false);
-      setFormData({ title: '', username: '', password: '', url: '', notes: '', favorite: false });
+      setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
+      setVisiblePasswords({});
       fetchItems();
       toast.success('Berhasil menyimpan data');
     } catch (error) {
@@ -259,10 +278,13 @@ export const Vault = () => {
                       <div className="flex items-center justify-end gap-0.5 md:gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => {
-                            if (item.decrypted?.password) {
-                              navigator.clipboard.writeText(item.decrypted.password);
+                            const pwToCopy = item.decrypted?.password || item.decrypted?.credentials?.[0]?.password;
+                            if (pwToCopy) {
+                              navigator.clipboard.writeText(pwToCopy);
                               if (navigator.vibrate) navigator.vibrate(30);
                               toast.success('Password disalin!');
+                            } else {
+                              toast.error('Tidak ada password untuk disalin');
                             }
                           }}
                           className="p-1 md:p-2 text-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
@@ -310,44 +332,79 @@ export const Vault = () => {
                 />
               </div>
 
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Username / Email</label>
-                <input 
-                  type="text" 
-                  value={formData.username}
-                  onChange={(e) => setFormData({...formData, username: e.target.value})}
-                  placeholder="johndoe / john@example.com"
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Password</label>
-                <div className="flex gap-1.5">
-                  <div className="relative flex-1">
-                    <input 
-                      type={showFormPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 pr-8 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowFormPassword(!showFormPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
-                    >
-                      {showFormPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
+              <div className="space-y-3">
+                {formData.credentials.map((cred, index) => (
+                  <div key={cred.id} className="p-2.5 bg-black/5 dark:bg-black/20 border border-border/50 rounded-xl relative group">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Credential {index + 1}</span>
+                      {formData.credentials.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removeCredentialRow(cred.id)}
+                          className="text-danger hover:bg-danger/10 p-1 rounded transition-colors"
+                          title="Hapus baris ini"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <input 
+                          type="text" 
+                          value={cred.username}
+                          onChange={(e) => {
+                            const newCreds = [...formData.credentials];
+                            newCreds[index].username = e.target.value;
+                            setFormData({...formData, credentials: newCreds});
+                          }}
+                          placeholder="Username / Email"
+                          className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="relative flex-1">
+                          <input 
+                            type={visiblePasswords[cred.id] ? "text" : "password"}
+                            value={cred.password}
+                            onChange={(e) => {
+                              const newCreds = [...formData.credentials];
+                              newCreds[index].password = e.target.value;
+                              setFormData({...formData, credentials: newCreds});
+                            }}
+                            placeholder="Password"
+                            className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setVisiblePasswords(prev => ({...prev, [cred.id]: !prev[cred.id]}))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                          >
+                            {visiblePasswords[cred.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                          </button>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => generatePassword(cred.id)}
+                          className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                          title="Generate Password"
+                        >
+                          <RefreshCw size={12} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <button 
-                    type="button"
-                    onClick={generatePassword}
-                    className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors flex items-center justify-center"
-                    title="Generate Random Password"
-                  >
-                    <RefreshCw size={14} />
-                  </button>
-                </div>
+                ))}
+                
+                <button 
+                  type="button"
+                  onClick={addCredentialRow}
+                  className="w-full border border-dashed border-border hover:border-primary/50 text-text-muted hover:text-primary bg-transparent hover:bg-primary/5 py-1.5 rounded-xl transition-colors text-xs font-medium flex items-center justify-center gap-1.5"
+                >
+                  <Plus size={12} />
+                  Tambah Baris Akun
+                </button>
               </div>
 
               <div>
