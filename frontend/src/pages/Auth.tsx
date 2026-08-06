@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVaultStore } from '../store/vaultStore';
-import { Shield, Fingerprint, Eye, EyeOff } from 'lucide-react';
+import { Shield, Fingerprint, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_URL } from '../config';
+import { startAuthentication } from '@simplewebauthn/browser';
+import localforage from 'localforage';
 
 export const Auth = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -14,8 +16,16 @@ export const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showMasterPassword, setShowMasterPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [bioLoading, setBioLoading] = useState(false);
   const navigate = useNavigate();
   const { setMasterPassword } = useVaultStore();
+
+  // Try to load saved email on mount
+  React.useEffect(() => {
+    localforage.getItem('savedEmail').then((val) => {
+      if (val && typeof val === 'string') setEmail(val);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +42,10 @@ export const Auth = () => {
         password
       }, { withCredentials: true });
 
+      // Save to localforage for future biometric logins
+      await localforage.setItem('savedEmail', email);
+      await localforage.setItem('savedMasterPassword', masterPassword);
+
       // Save master password in memory
       setMasterPassword(masterPassword);
       toast.success(isRegister ? 'Account created successfully!' : 'Vault unlocked!');
@@ -42,6 +56,62 @@ export const Auth = () => {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!email) {
+      const savedEmail = await localforage.getItem('savedEmail') as string;
+      if (!savedEmail) {
+        return toast.error('Silakan isi email atau login manual dulu setidaknya satu kali.');
+      }
+      setEmail(savedEmail);
+    }
+
+    const currentEmail = email || await localforage.getItem('savedEmail') as string;
+    
+    setBioLoading(true);
+    try {
+      // 1. Generate options
+      const optionsRes = await axios.post(`${API_URL}/api/webauthn/generate-authentication-options`, {
+        email: currentEmail
+      });
+      
+      // 2. Pass to browser
+      let asseResp;
+      try {
+        asseResp = await startAuthentication(optionsRes.data.data);
+      } catch (error: any) {
+        toast.error(error.message);
+        setBioLoading(false);
+        return;
+      }
+
+      // 3. Verify
+      const verificationRes = await axios.post(`${API_URL}/api/webauthn/verify-authentication`, {
+        email: currentEmail,
+        response: asseResp
+      });
+
+      if (verificationRes.data.success) {
+        // Load master password from storage
+        const savedMasterPassword = await localforage.getItem('savedMasterPassword') as string;
+        if (savedMasterPassword) {
+          setMasterPassword(savedMasterPassword);
+        } else {
+          // If for some reason it's missing
+          toast.success('Biometrik lolos, tapi butuh Master Password.');
+          return;
+        }
+
+        toast.success('Vault unlocked with Biometrics!');
+        navigate('/vault');
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Biometric login failed');
+    } finally {
+      setBioLoading(false);
     }
   };
 
@@ -145,9 +215,11 @@ export const Auth = () => {
           
           <button 
             type="button"
-            className="w-full bg-surface hover:bg-surface/80 border border-border text-text-primary font-medium py-1.5 md:py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-[12px] md:text-base"
+            onClick={handleBiometricLogin}
+            disabled={bioLoading}
+            className="w-full bg-surface hover:bg-surface/80 border border-border text-text-primary font-medium py-1.5 md:py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 text-[12px] md:text-base disabled:opacity-50"
           >
-            <Fingerprint size={16} className="md:w-[18px] md:h-[18px]" />
+            {bioLoading ? <RefreshCw size={16} className="animate-spin md:w-[18px] md:h-[18px]" /> : <Fingerprint size={16} className="md:w-[18px] md:h-[18px]" />}
             Unlock with Biometrics
           </button>
         </form>

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive } from 'lucide-react';
+import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
+import { startRegistration } from '@simplewebauthn/browser';
+import toast from 'react-hot-toast';
 
 export const Settings = () => {
   const { masterPassword, setMasterPassword } = useVaultStore();
@@ -14,6 +16,73 @@ export const Settings = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [devices, setDevices] = useState<any[]>([]);
+  const [registering, setRegistering] = useState(false);
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/webauthn/devices`, { withCredentials: true });
+      if (res.data.success) {
+        setDevices(res.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch devices', error);
+    }
+  };
+
+  const handleRegisterDevice = async () => {
+    setRegistering(true);
+    try {
+      // 1. Get options from server
+      const optionsRes = await axios.get(`${API_URL}/api/webauthn/generate-registration-options`, { withCredentials: true });
+      const options = optionsRes.data.data;
+
+      // 2. Pass options to browser authenticator
+      let attResp;
+      try {
+        attResp = await startRegistration(options);
+      } catch (error: any) {
+        if (error.name === 'InvalidStateError') {
+          toast.error('Perangkat ini sudah terdaftar!');
+        } else {
+          toast.error(error.message);
+        }
+        setRegistering(false);
+        return;
+      }
+
+      // 3. Send response back to server
+      const verificationRes = await axios.post(`${API_URL}/api/webauthn/verify-registration`, {
+        response: attResp,
+        deviceName: `Browser on ${navigator.userAgent.split(' ')[0]}` // Simple fallback name
+      }, { withCredentials: true });
+
+      if (verificationRes.data.success) {
+        toast.success('Sidik Jari / FaceID berhasil didaftarkan!');
+        fetchDevices();
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Gagal mendaftarkan perangkat');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleDeleteDevice = async (id: string) => {
+    if (!confirm('Hapus perangkat ini? Anda tidak bisa lagi login dengan biometrik dari perangkat ini.')) return;
+    try {
+      await axios.delete(`${API_URL}/api/webauthn/devices/${id}`, { withCredentials: true });
+      toast.success('Perangkat dihapus');
+      fetchDevices();
+    } catch (error) {
+      toast.error('Gagal menghapus perangkat');
+    }
+  };
 
   const handleExport = async (format: 'json' | 'csv') => {
     if (!masterPassword) return;
@@ -278,6 +347,55 @@ export const Settings = () => {
                 Export JSON
               </button>
             </div>
+          </div>
+
+          {/* Biometrics Settings */}
+          <div className="bg-surface/30 border border-border rounded-xl p-6 backdrop-blur-sm h-fit">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/20 text-blue-500 flex items-center justify-center">
+                <Fingerprint size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-text-primary">Keamanan & Perangkat</h3>
+                <p className="text-xs text-text-muted">Login tanpa password dengan Biometrik (WebAuthn)</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-text-muted mb-4">
+              Daftarkan perangkat ini untuk login menggunakan Sidik Jari, FaceID, atau Windows Hello di masa mendatang.
+            </p>
+
+            <button 
+              onClick={handleRegisterDevice}
+              disabled={registering}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50 mb-6"
+            >
+              {registering ? <RefreshCw size={18} className="animate-spin" /> : <Fingerprint size={18} />}
+              Daftarkan Perangkat Ini
+            </button>
+
+            {devices.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Perangkat Terdaftar</h4>
+                <div className="space-y-2">
+                  {devices.map(device => (
+                    <div key={device.id} className="flex items-center justify-between bg-black/5 dark:bg-black/40 border border-border p-3 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{device.deviceName}</p>
+                        <p className="text-[10px] text-text-muted mt-0.5">Didaftarkan: {new Date(device.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteDevice(device.id)}
+                        className="text-danger hover:bg-danger/10 p-2 rounded-lg transition-colors"
+                        title="Hapus Perangkat"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

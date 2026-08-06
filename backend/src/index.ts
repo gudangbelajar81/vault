@@ -8,6 +8,7 @@ import authRoutes from './routes/auth';
 import vaultRoutes from './routes/vault';
 import subscriptionRoutes from './routes/subscriptions';
 import licenseManagerRoutes from './routes/licenseManager';
+import webauthnRoutes from './routes/webauthn';
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/webauthn', webauthnRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api', licenseManagerRoutes);

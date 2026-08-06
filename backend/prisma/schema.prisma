@@ -15,6 +15,7 @@ model User {
   email               String     @unique
   passwordHash        String
   recoveryCodes       String      @db.Text // JSON stringified array of hashed backup codes
+  currentChallenge    String?     @db.Text // Store current FIDO2 challenge
   createdAt           DateTime    @default(now())
   updatedAt           DateTime   @updatedAt
   deletedAt           DateTime?
@@ -42,6 +43,8 @@ model WebAuthnCredential {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   credentialId  String   @unique
   publicKey     String   @db.Text
+  counter       BigInt   @default(0)
+  transports    String?
   deviceName    String?
   lastUsed      DateTime @default(now())
   createdAt     DateTime @default(now())
