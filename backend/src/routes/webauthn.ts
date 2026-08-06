@@ -54,11 +54,12 @@ router.get('/generate-registration-options', requireAuth, async (req: Request, r
     const options = await generateRegistrationOptions({
       rpName,
       rpID,
-      userID: new Uint8Array(Buffer.from(user.id)),
+      userID: user.id,
       userName: user.email,
       // Don't prompt users for their authenticator if they already registered it
       excludeCredentials: userCredentials.map(cred => ({
         id: new Uint8Array(Buffer.from(cred.credentialId, 'base64url')),
+        type: 'public-key',
         transports: cred.transports ? (JSON.parse(cred.transports) as any) : undefined,
       })),
       authenticatorSelection: {
@@ -169,6 +170,7 @@ router.post('/generate-authentication-options', async (req: Request, res: Respon
       rpID,
       allowCredentials: userCredentials.map(cred => ({
         id: new Uint8Array(Buffer.from(cred.credentialId, 'base64url')),
+        type: 'public-key',
         transports: cred.transports ? (JSON.parse(cred.transports) as any) : undefined,
       })),
       userVerification: 'preferred',
@@ -305,7 +307,7 @@ router.get('/devices', requireAuth, async (req: Request, res: Response) => {
 router.delete('/devices/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
-    const deviceId = req.params.id;
+    const deviceId = req.params.id as string;
     
     await prisma.webAuthnCredential.deleteMany({
       where: { 
