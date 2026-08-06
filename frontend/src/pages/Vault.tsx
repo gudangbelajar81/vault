@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Plus, Search, MoreVertical, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload, Trash2 } from 'lucide-react';
+import { Plus, Search, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload, Trash2, Edit2 } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -14,6 +14,7 @@ export const Vault = () => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,24 +101,66 @@ export const Vault = () => {
 
       const encryptedData = await encryptData(dataToEncrypt, masterPassword);
 
-      await axios.post(`${API_URL}/api/vault`, {
-        type: 'password',
-        title: formData.title,
-        encryptedData,
-        favorite: formData.favorite
-      }, { withCredentials: true });
+      if (editingItemId) {
+        await axios.put(`${API_URL}/api/vault/${editingItemId}`, {
+          title: formData.title,
+          encryptedData,
+          favorite: formData.favorite
+        }, { withCredentials: true });
+        toast.success('Berhasil mengubah data');
+      } else {
+        await axios.post(`${API_URL}/api/vault`, {
+          type: 'password',
+          title: formData.title,
+          encryptedData,
+          favorite: formData.favorite
+        }, { withCredentials: true });
+        toast.success('Berhasil menyimpan data');
+      }
 
       setIsModalOpen(false);
+      setEditingItemId(null);
       setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
       setVisiblePasswords({});
       fetchItems();
-      toast.success('Berhasil menyimpan data');
     } catch (error) {
       console.error(error);
       toast.error('Gagal menyimpan data');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus data ini secara permanen?')) return;
+    try {
+      await axios.delete(`${API_URL}/api/vault/${id}`, { withCredentials: true });
+      toast.success('Data berhasil dihapus');
+      fetchItems();
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal menghapus data');
+    }
+  };
+
+  const openEditModal = (item: any) => {
+    // Determine credentials format (new array or old single format)
+    let creds = [{ id: Date.now().toString(), username: '', password: '' }];
+    if (item.decrypted?.credentials && Array.isArray(item.decrypted.credentials)) {
+      creds = item.decrypted.credentials;
+    } else if (item.decrypted?.username || item.decrypted?.password) {
+      creds = [{ id: Date.now().toString(), username: item.decrypted.username || '', password: item.decrypted.password || '' }];
+    }
+
+    setFormData({
+      title: item.title,
+      credentials: creds,
+      url: item.decrypted?.url || '',
+      notes: item.decrypted?.notes || '',
+      favorite: item.favorite || false
+    });
+    setEditingItemId(item.id);
+    setIsModalOpen(true);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,7 +241,11 @@ export const Vault = () => {
             {importing ? 'Importing...' : <span className="hidden md:inline">Import CSV</span>}
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setEditingItemId(null);
+              setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
+              setIsModalOpen(true);
+            }}
             className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
           >
             <Plus size={12} />
@@ -245,7 +292,7 @@ export const Vault = () => {
               <tbody className="divide-y divide-border block md:table-row-group">
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-2 px-2 md:py-0 md:px-0 border-b border-border/50 md:border-none">
-                    <td className="flex-1 md:flex-none p-0 md:px-3 md:py-2">
+                    <td className="flex-1 md:flex-none p-0 md:px-3 md:py-2 cursor-pointer group-hover:bg-black/5 dark:group-hover:bg-white/5" onClick={() => openEditModal(item)}>
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-md bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                           {item.title.charAt(0).toUpperCase()}
@@ -292,8 +339,19 @@ export const Vault = () => {
                         >
                           <Copy size={14} className="md:w-4 md:h-4" />
                         </button>
-                        <button className="p-1 md:p-2 text-text-muted hover:text-text-primary hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors">
-                          <MoreVertical size={14} className="md:w-4 md:h-4" />
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
+                          className="p-1 md:p-2 text-text-muted hover:text-info hover:bg-info/10 rounded-lg transition-colors"
+                          title="Edit Item"
+                        >
+                          <Edit2 size={14} className="md:w-4 md:h-4" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                          className="p-1 md:p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                          title="Delete Item"
+                        >
+                          <Trash2 size={14} className="md:w-4 md:h-4" />
                         </button>
                       </div>
                     </td>
@@ -310,9 +368,12 @@ export const Vault = () => {
         <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center p-3 border-b border-border">
-              <h3 className="text-sm font-bold text-text-primary">Add New Vault Item</h3>
+              <h3 className="text-sm font-bold text-text-primary">{editingItemId ? 'Edit Vault Item' : 'Add New Vault Item'}</h3>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingItemId(null);
+                }}
                 className="text-text-muted hover:text-text-primary transition-colors"
               >
                 <X size={16} />
@@ -445,7 +506,10 @@ export const Vault = () => {
             <div className="p-3 border-t border-border flex justify-end gap-2 bg-surface/30">
               <button 
                 type="button"
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingItemId(null);
+                }}
                 className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs"
               >
                 Cancel
