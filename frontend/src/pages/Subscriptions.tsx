@@ -60,7 +60,7 @@ const getDueBadge = (days: number, status: string) => {
   return <span className="text-xs text-text-muted">{days} hari lagi</span>;
 };
 
-const emptyForm = { name: '', price: '' as number | '', currency: 'IDR', billingCycle: 'monthly', nextBillingDate: '', status: 'active', accountEmail: '' };
+const getEmptyForm = () => ({ id: Date.now().toString() + Math.random(), name: '', price: '' as number | '', currency: 'IDR', billingCycle: 'monthly', nextBillingDate: '', status: 'active', accountEmail: '' });
 
 export const Subscriptions = () => {
   const [items, setItems] = useState<Subscription[]>([]);
@@ -68,7 +68,7 @@ export const Subscriptions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<typeof emptyForm>(emptyForm);
+  const [formsData, setFormsData] = useState<ReturnType<typeof getEmptyForm>[]>([]);
 
   const fetchItems = async () => {
     try {
@@ -83,10 +83,11 @@ export const Subscriptions = () => {
 
   useEffect(() => { fetchItems(); }, []);
 
-  const openAdd = () => { setEditId(null); setFormData(emptyForm); setIsModalOpen(true); };
+  const openAdd = () => { setEditId(null); setFormsData([getEmptyForm()]); setIsModalOpen(true); };
   const openEdit = (sub: Subscription) => {
     setEditId(sub.id);
-    setFormData({
+    setFormsData([{
+      id: sub.id,
       name: sub.name,
       price: sub.price,
       currency: sub.currency,
@@ -94,7 +95,7 @@ export const Subscriptions = () => {
       nextBillingDate: sub.nextBillingDate.split('T')[0],
       status: sub.status,
       accountEmail: sub.accountEmail || '',
-    });
+    }]);
     setIsModalOpen(true);
   };
 
@@ -103,9 +104,11 @@ export const Subscriptions = () => {
     setSaving(true);
     try {
       if (editId) {
-        await axios.put(`${API}/${editId}`, formData, { withCredentials: true });
+        await axios.put(`${API}/${editId}`, formsData[0], { withCredentials: true });
       } else {
-        await axios.post(API, formData, { withCredentials: true });
+        await Promise.all(
+          formsData.map(data => axios.post(API, data, { withCredentials: true }))
+        );
       }
       setIsModalOpen(false);
       fetchItems();
@@ -259,93 +262,149 @@ export const Subscriptions = () => {
               <button onClick={() => setIsModalOpen(false)} className="text-text-muted hover:text-text-primary transition-colors"><X size={16} /></button>
             </div>
 
-            <form onSubmit={handleSave} className="p-3 flex flex-col gap-2">
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Nama Layanan *</label>
-                <input
-                  type="text" required value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Netflix, Spotify, ChatGPT Plus..."
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
-              </div>
+            <form onSubmit={handleSave} className="p-3 flex flex-col gap-2 max-h-[75vh] overflow-y-auto">
+              {formsData.map((formData, index) => (
+                <div key={formData.id} className={`flex flex-col gap-2 ${index > 0 ? 'mt-4 pt-4 border-t border-border/50' : ''}`}>
+                  {formsData.length > 1 && (
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Langganan {index + 1}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setFormsData(formsData.filter((_, i) => i !== index))}
+                        className="text-danger hover:bg-danger/10 p-1 rounded transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Nama Layanan *</label>
+                    <input
+                      type="text" required value={formData.name}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].name = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      placeholder="Netflix, Spotify, ChatGPT Plus..."
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Harga</label>
-                  <input
-                    type="number" value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                    placeholder="0"
-                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Harga</label>
+                      <input
+                        type="number" value={formData.price}
+                        onChange={(e) => {
+                          const newForms = [...formsData];
+                          newForms[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          setFormsData(newForms);
+                        }}
+                        placeholder="0"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Mata Uang</label>
+                      <select
+                        value={formData.currency}
+                        onChange={(e) => {
+                          const newForms = [...formsData];
+                          newForms[index].currency = e.target.value;
+                          setFormsData(newForms);
+                        }}
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      >
+                        <option value="IDR">IDR</option>
+                        <option value="USD">USD</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Siklus</label>
+                      <select
+                        value={formData.billingCycle}
+                        onChange={(e) => {
+                          const newForms = [...formsData];
+                          newForms[index].billingCycle = e.target.value;
+                          setFormsData(newForms);
+                        }}
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      >
+                        <option value="monthly">Bulanan</option>
+                        <option value="yearly">Tahunan</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Status</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => {
+                          const newForms = [...formsData];
+                          newForms[index].status = e.target.value;
+                          setFormsData(newForms);
+                        }}
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      >
+                        <option value="active">Aktif</option>
+                        <option value="paused">Dijeda</option>
+                        <option value="cancelled">Batal</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Tagihan Berikutnya</label>
+                    <input
+                      type="date" value={formData.nextBillingDate}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].nextBillingDate = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Email Akun</label>
+                    <input
+                      type="email" value={formData.accountEmail}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].accountEmail = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      placeholder="bos@gmail.com"
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Mata Uang</label>
-                  <select
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  >
-                    <option value="IDR">IDR</option>
-                    <option value="USD">USD</option>
-                  </select>
-                </div>
-              </div>
+              ))}
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Siklus</label>
-                  <select
-                    value={formData.billingCycle}
-                    onChange={(e) => setFormData({ ...formData, billingCycle: e.target.value })}
-                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  >
-                    <option value="monthly">Bulanan</option>
-                    <option value="yearly">Tahunan</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  >
-                    <option value="active">Aktif</option>
-                    <option value="paused">Dijeda</option>
-                    <option value="cancelled">Batal</option>
-                  </select>
-                </div>
-              </div>
+              {!editId && (
+                <button 
+                  type="button"
+                  onClick={() => setFormsData([...formsData, getEmptyForm()])}
+                  className="mt-2 w-full border border-dashed border-border hover:border-primary/50 text-text-muted hover:text-primary bg-transparent hover:bg-primary/5 py-1.5 rounded-xl transition-colors text-xs font-medium flex items-center justify-center gap-1.5"
+                >
+                  <Plus size={12} />
+                  Tambah Langganan Lain
+                </button>
+              )}
 
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Tagihan Berikutnya</label>
-                <input
-                  type="date" value={formData.nextBillingDate}
-                  onChange={(e) => setFormData({ ...formData, nextBillingDate: e.target.value })}
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Email Akun</label>
-                <input
-                  type="email" value={formData.accountEmail}
-                  onChange={(e) => setFormData({ ...formData, accountEmail: e.target.value })}
-                  placeholder="bos@gmail.com"
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 mt-2">
+              <div className="flex justify-end gap-2 mt-2 pt-2 border-t border-border/50 sticky bottom-0 bg-surface">
                 <button type="button" onClick={() => setIsModalOpen(false)}
                   className="px-4 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-medium text-xs">
                   Batal
                 </button>
-                <button type="submit" disabled={saving || !formData.name}
+                <button type="submit" disabled={saving || formsData.some(f => !f.name)}
                   className="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg transition-transform active:scale-95 disabled:opacity-50 font-medium shadow-md text-xs">
-                  {saving ? 'Menyimpan...' : (editId ? 'Perbarui' : 'Simpan')}
+                  {saving ? 'Menyimpan...' : (editId ? 'Perbarui' : 'Simpan Semua')}
                 </button>
               </div>
             </form>
