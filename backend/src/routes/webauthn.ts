@@ -21,8 +21,26 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-ganti-di-produksi'
 
 // Helper to get dynamic origin and RP ID
 const getDomainConfig = (req: Request) => {
-  const rpID = process.env.RP_ID || req.hostname;
-  const origin = process.env.FRONTEND_URL || req.headers.origin || `https://${rpID}`;
+  let rpID = process.env.RP_ID;
+  let origin = process.env.FRONTEND_URL || req.headers.origin;
+
+  if (!rpID) {
+    if (origin) {
+      try {
+        rpID = new URL(origin).hostname;
+      } catch (e) {
+        rpID = req.hostname;
+      }
+    } else {
+      rpID = req.hostname;
+    }
+  }
+
+  if (!origin) {
+    origin = `https://${rpID}`;
+  }
+
+  console.log(`[WebAuthn] Using RP_ID: ${rpID}, Origin: ${origin}`);
   return { rpID, origin };
 };
 
@@ -69,9 +87,9 @@ router.get('/generate-registration-options', requireAuth, async (req: Request, r
         transports: cred.transports ? (JSON.parse(cred.transports) as any) : undefined,
       })),
       authenticatorSelection: {
-        residentKey: 'preferred',
-        userVerification: 'preferred',
-        authenticatorAttachment: 'platform', // Enforce on-device (FaceID/TouchID/Windows Hello)
+        authenticatorAttachment: 'platform',
+        userVerification: 'preferred', // More compatible than 'required'
+        residentKey: 'preferred', // More compatible than 'required'
       },
     });
 
