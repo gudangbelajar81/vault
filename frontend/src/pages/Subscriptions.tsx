@@ -278,10 +278,10 @@ export const Subscriptions = () => {
                     </div>
                   )}
 
-                  {/* Baris 1 */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                    <div className="md:col-span-2">
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Nama Layanan *</label>
+                  {/* Baris 1 (3 form) */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Nama Layanan *</label>
                       <input
                         type="text" required value={formData.name}
                         onChange={(e) => {
@@ -289,12 +289,12 @@ export const Subscriptions = () => {
                           newForms[index].name = e.target.value;
                           setFormsData(newForms);
                         }}
-                        placeholder="Netflix, Spotify, ChatGPT Plus..."
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="Netflix..."
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Harga</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Harga</label>
                       <input
                         type="number" value={formData.price}
                         onChange={(e) => {
@@ -303,11 +303,11 @@ export const Subscriptions = () => {
                           setFormsData(newForms);
                         }}
                         placeholder="0"
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Mata Uang</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Mata Uang</label>
                       <select
                         value={formData.currency}
                         onChange={(e) => {
@@ -315,7 +315,7 @@ export const Subscriptions = () => {
                           newForms[index].currency = e.target.value;
                           setFormsData(newForms);
                         }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       >
                         <option value="IDR">IDR</option>
                         <option value="USD">USD</option>
@@ -323,10 +323,10 @@ export const Subscriptions = () => {
                     </div>
                   </div>
 
-                  {/* Baris 2 */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                  {/* Baris 2 (4 form) */}
+                  <div className="grid grid-cols-4 gap-2">
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Siklus</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Siklus</label>
                       <select
                         value={formData.billingCycle}
                         onChange={(e) => {
@@ -334,14 +334,14 @@ export const Subscriptions = () => {
                           newForms[index].billingCycle = e.target.value;
                           setFormsData(newForms);
                         }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       >
-                        <option value="monthly">Bulanan</option>
-                        <option value="yearly">Tahunan</option>
+                        <option value="monthly">Bulan</option>
+                        <option value="yearly">Tahun</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Status</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Status</label>
                       <select
                         value={formData.status}
                         onChange={(e) => {
@@ -349,15 +349,15 @@ export const Subscriptions = () => {
                           newForms[index].status = e.target.value;
                           setFormsData(newForms);
                         }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       >
                         <option value="active">Aktif</option>
-                        <option value="paused">Dijeda</option>
+                        <option value="paused">Jeda</option>
                         <option value="cancelled">Batal</option>
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Tagihan Berikutnya</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Tagihan</label>
                       <input
                         type="date" value={formData.nextBillingDate}
                         onChange={(e) => {
@@ -365,11 +365,11 @@ export const Subscriptions = () => {
                           newForms[index].nextBillingDate = e.target.value;
                           setFormsData(newForms);
                         }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Email Akun</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Email</label>
                       <input
                         type="email" value={formData.accountEmail}
                         onChange={(e) => {
@@ -377,8 +377,8 @@ export const Subscriptions = () => {
                           newForms[index].accountEmail = e.target.value;
                           setFormsData(newForms);
                         }}
-                        placeholder="bos@gmail.com"
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="@"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                     </div>
                   </div>
