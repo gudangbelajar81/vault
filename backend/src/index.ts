@@ -34,6 +34,18 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Backend is healthy!' });
 });
 
+// Logs Endpoint for Debugging VPS
+app.get('/api/logs', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const logPath = path.resolve('../api.log');
+  if (fs.existsSync(logPath)) {
+    res.sendFile(logPath);
+  } else {
+    res.status(404).send('Log file not found at ' + logPath);
+  }
+});
+
 // Pintu Tol Komunikasi (CORS) - Standar AlvezaDigital
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
