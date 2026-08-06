@@ -17,9 +17,14 @@ const router = express.Router();
 
 // Configuration
 const rpName = 'VaultPro';
-const rpID = process.env.RP_ID || 'localhost';
-const origin = process.env.FRONTEND_URL || 'http://localhost:5173';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-ganti-di-produksi';
+
+// Helper to get dynamic origin and RP ID
+const getDomainConfig = (req: Request) => {
+  const rpID = process.env.RP_ID || req.hostname;
+  const origin = process.env.FRONTEND_URL || req.headers.origin || `https://${rpID}`;
+  return { rpID, origin };
+};
 
 // Middleware to extract user from session (Assuming cookie 'token')
 const requireAuth = async (req: Request, res: Response, next: express.NextFunction) => {
@@ -45,6 +50,7 @@ const requireAuth = async (req: Request, res: Response, next: express.NextFuncti
 router.get('/generate-registration-options', requireAuth, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
+    const { rpID } = getDomainConfig(req);
 
     // Get existing credentials for this user
     const userCredentials = await prisma.webAuthnCredential.findMany({
@@ -89,6 +95,7 @@ router.post('/verify-registration', requireAuth, async (req: Request, res: Respo
   try {
     const user = (req as any).user;
     const { response, deviceName } = req.body;
+    const { rpID, origin } = getDomainConfig(req);
     
     const expectedChallenge = user.currentChallenge;
     
@@ -148,6 +155,7 @@ router.post('/verify-registration', requireAuth, async (req: Request, res: Respo
 router.post('/generate-authentication-options', async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
+    const { rpID } = getDomainConfig(req);
     
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email required for biometric login' });
@@ -195,6 +203,7 @@ router.post('/generate-authentication-options', async (req: Request, res: Respon
 router.post('/verify-authentication', async (req: Request, res: Response) => {
   try {
     const { email, response } = req.body;
+    const { rpID, origin } = getDomainConfig(req);
     
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
