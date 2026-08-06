@@ -307,19 +307,17 @@ export const Subscriptions = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Mata Uang</label>
-                      <select
-                        value={formData.currency}
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Email</label>
+                      <input
+                        type="email" value={formData.accountEmail}
                         onChange={(e) => {
                           const newForms = [...formsData];
-                          newForms[index].currency = e.target.value;
+                          newForms[index].accountEmail = e.target.value;
                           setFormsData(newForms);
                         }}
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      >
-                        <option value="IDR">IDR</option>
-                        <option value="USD">USD</option>
-                      </select>
+                        placeholder="@"
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      />
                     </div>
                   </div>
 
@@ -369,17 +367,19 @@ export const Subscriptions = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Email</label>
-                      <input
-                        type="email" value={formData.accountEmail}
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Mata Uang</label>
+                      <select
+                        value={formData.currency}
                         onChange={(e) => {
                           const newForms = [...formsData];
-                          newForms[index].accountEmail = e.target.value;
+                          newForms[index].currency = e.target.value;
                           setFormsData(newForms);
                         }}
-                        placeholder="@"
-                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      />
+                        className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-1 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      >
+                        <option value="IDR">IDR</option>
+                        <option value="USD">USD</option>
+                      </select>
                     </div>
                   </div>
                 </div>
