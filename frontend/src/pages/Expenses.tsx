@@ -101,7 +101,12 @@ export const Expenses = () => {
   }, [expenses]);
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(amount);
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+    setFormData({ ...formData, amount: rawValue === '' ? '' : parseFloat(rawValue) });
   };
 
   return (
@@ -214,7 +219,7 @@ export const Expenses = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
                    <label className="text-xs font-semibold text-text-muted mb-1 block">Jumlah / Nominal *</label>
-                   <input type="number" required min="0" value={formData.amount || ''} onChange={e => setFormData({...formData, amount: e.target.value === '' ? '' : parseFloat(e.target.value)})} placeholder="Contoh: 50000" className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary transition-colors" />
+                   <input type="text" required value={formData.amount === '' || formData.amount === undefined ? '' : formatCurrency(formData.amount, formData.currency || 'IDR')} onChange={handleAmountChange} placeholder="Contoh: Rp 50.000" className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-2 text-sm text-text-primary outline-none focus:border-primary transition-colors" />
                  </div>
                  <div className="grid grid-cols-2 gap-2">
                     <div>

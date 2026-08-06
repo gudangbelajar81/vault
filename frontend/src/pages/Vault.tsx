@@ -28,6 +28,7 @@ export const Vault = () => {
     favorite: false
   });
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  const [visibleUsernames, setVisibleUsernames] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchItems();
@@ -122,6 +123,7 @@ export const Vault = () => {
       setEditingItemId(null);
       setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
       setVisiblePasswords({});
+      setVisibleUsernames({});
       fetchItems();
     } catch (error) {
       console.error(error);
@@ -411,9 +413,9 @@ export const Vault = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div>
+                      <div className="relative">
                         <input 
-                          type="text" 
+                          type={visibleUsernames[cred.id] ? "text" : "password"} 
                           value={cred.username}
                           onChange={(e) => {
                             const newCreds = [...formData.credentials];
@@ -421,8 +423,15 @@ export const Vault = () => {
                             setFormData({...formData, credentials: newCreds});
                           }}
                           placeholder="Username / Email"
-                          className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                          className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         />
+                        <button 
+                          type="button" 
+                          onClick={() => setVisibleUsernames(prev => ({...prev, [cred.id]: !prev[cred.id]}))}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                        >
+                          {visibleUsernames[cred.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
                       </div>
                       <div className="flex gap-1.5">
                         <div className="relative flex-1">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2 } from 'lucide-react';
+import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -18,6 +18,9 @@ export const Settings = () => {
   const [exporting, setExporting] = useState(false);
   const [devices, setDevices] = useState<any[]>([]);
   const [registering, setRegistering] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     fetchDevices();
@@ -267,29 +270,50 @@ export const Settings = () => {
           )}
 
           <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium text-text-muted mb-1 block">Master Password Saat Ini</label>
               <input 
-                type="password" required value={oldPassword}
+                type={showOldPassword ? "text" : "password"} required value={oldPassword}
                 onChange={e => setOldPassword(e.target.value)}
-                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 pr-10 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
+              <button 
+                type="button" 
+                onClick={() => setShowOldPassword(!showOldPassword)}
+                className="absolute right-3 top-[34px] text-text-muted hover:text-primary transition-colors p-1"
+              >
+                {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium text-text-muted mb-1 block">Master Password Baru</label>
               <input 
-                type="password" required minLength={8} value={newPassword}
+                type={showNewPassword ? "text" : "password"} required minLength={8} value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 pr-10 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
+              <button 
+                type="button" 
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-[34px] text-text-muted hover:text-primary transition-colors p-1"
+              >
+                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium text-text-muted mb-1 block">Konfirmasi Password Baru</label>
               <input 
-                type="password" required minLength={8} value={confirmPassword}
+                type={showConfirmPassword ? "text" : "password"} required minLength={8} value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 pr-10 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
+              <button 
+                type="button" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-[34px] text-text-muted hover:text-primary transition-colors p-1"
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
             <div className="mt-2 p-3 bg-warning/10 border border-warning/20 rounded-lg">

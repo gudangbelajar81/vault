@@ -296,10 +296,11 @@ export const Subscriptions = () => {
                     <div>
                       <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Harga</label>
                       <input
-                        type="number" value={formData.price}
+                        type="text" value={formData.price === '' || formData.price === undefined ? '' : formatCurrency(formData.price as number, formData.currency || 'IDR')}
                         onChange={(e) => {
                           const newForms = [...formsData];
-                          newForms[index].price = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                          newForms[index].price = rawValue === '' ? '' : parseFloat(rawValue);
                           setFormsData(newForms);
                         }}
                         placeholder="0"
