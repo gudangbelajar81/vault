@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../utils/prisma';
@@ -49,7 +49,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error: any) {
     console.error('Register error:', error);
-    sendResponse(res, 500, false, 'Gagal melakukan registrasi');
+    sendResponse(res, 500, false, 'Gagal melakukan registrasi', { details: error.message });
   }
 };
 
@@ -100,7 +100,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error: any) {
     console.error('Login error:', error);
-    sendResponse(res, 500, false, 'Gagal melakukan login');
+    sendResponse(res, 500, false, 'Gagal melakukan login', { details: error.message });
   }
 };
 
