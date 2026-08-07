@@ -1,12 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '../middlewares/auth';
+import { authenticate } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all expenses for current user
-router.get('/', verifyToken, async (req: any, res) => {
+router.get('/', authenticate, async (req: any, res) => {
   try {
     const expenses = await prisma.expense.findMany({
       where: { userId: req.user.id },
@@ -20,7 +20,7 @@ router.get('/', verifyToken, async (req: any, res) => {
 });
 
 // Add new expense
-router.post('/', verifyToken, async (req: any, res) => {
+router.post('/', authenticate, async (req: any, res) => {
   try {
     const { title, amount, currency, category, date, notes } = req.body;
     const expense = await prisma.expense.create({
@@ -42,7 +42,7 @@ router.post('/', verifyToken, async (req: any, res) => {
 });
 
 // Update expense
-router.put('/:id', verifyToken, async (req: any, res) => {
+router.put('/:id', authenticate, async (req: any, res) => {
   try {
     const { id } = req.params;
     const { title, amount, currency, category, date, notes } = req.body;
@@ -74,7 +74,7 @@ router.put('/:id', verifyToken, async (req: any, res) => {
 });
 
 // Delete expense
-router.delete('/:id', verifyToken, async (req: any, res) => {
+router.delete('/:id', authenticate, async (req: any, res) => {
   try {
     const { id } = req.params;
     
