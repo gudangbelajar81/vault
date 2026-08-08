@@ -105,7 +105,7 @@ model License {
   wa_number   String?  
   machine_id  String   
   tier        String   @default("BASIC") 
-  license_key String   
+  license_key String   @db.Text
   created_at  DateTime @default(now())
 }
 
@@ -123,7 +123,7 @@ model Otp {
   machine_id  String   
   app_code    String   
   status      String?  @default("pending") 
-  license_key String?  
+  license_key String?  @db.Text
   created_at  DateTime @default(now())
   expires_at  DateTime
 }
