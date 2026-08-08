@@ -42,7 +42,7 @@ const authenticateAdmin = (req: Request, res: Response, next: NextFunction): voi
   }
   
   try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-ganti-di-produksi');
     
     // Jika token punya role admin (Legacy), ATAU token punya id (Vault Pro User Session), izinkan masuk.
     if (decoded.role === 'admin' || decoded.id) {

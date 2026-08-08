@@ -23,7 +23,7 @@ const sendTelegramNotification = async (message: string) => {
 export const loginAdmin = async (req: Request, res: Response): Promise<void> => {
   const { password } = req.body;
   if (password === process.env.ADMIN_PASSWORD) {
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'secret', { expiresIn: '12h' });
+    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'fallback-secret-ganti-di-produksi', { expiresIn: '12h' });
     await sendTelegramNotification(`✅ [LOGIN SUCCESS] CEO masuk ke License Manager dari IP: ${req.ip || 'Unknown'}`);
     res.json({ token });
   } else {
