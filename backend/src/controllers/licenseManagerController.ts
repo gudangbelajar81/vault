@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import prisma from '../utils/prisma';
 
+import { DEFAULT_PRIVATE_KEY, DEFAULT_PUBLIC_KEY } from '../utils/keys';
+
 // Telegram Notifier
 const sendTelegramNotification = async (message: string) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -43,7 +45,7 @@ export const generateLicense = async (req: Request, res: Response): Promise<void
     let featuresArr = [];
     try { featuresArr = JSON.parse(pkg?.features || '[]'); } catch (e) {}
 
-    const privateKey = (process.env.PRIVATE_KEY || '').replace(/\\n/g, '\n');
+    const privateKey = process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : DEFAULT_PRIVATE_KEY;
 
     const payload = {
       app: app_code,
@@ -99,7 +101,17 @@ export const deleteLicense = async (req: Request, res: Response): Promise<void> 
 
 export const getPackages = async (req: Request, res: Response): Promise<void> => {
   try {
-    const rows = await prisma.package.findMany({ orderBy: { price: 'asc' } });
+    let rows = await prisma.package.findMany({ orderBy: { price: 'asc' } });
+    if (rows.length === 0) {
+      await prisma.package.createMany({
+        data: [
+          { tier_code: 'BASIC', display_name: 'Basic Plan', price: 100000, features: '[]' },
+          { tier_code: 'PRO', display_name: 'Pro Plan', price: 250000, features: '[]' },
+          { tier_code: 'GOD_TIER', display_name: 'God Tier', price: 500000, features: '[]' }
+        ]
+      });
+      rows = await prisma.package.findMany({ orderBy: { price: 'asc' } });
+    }
     res.json(rows);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch packages' });
@@ -144,7 +156,7 @@ export const deletePackage = async (req: Request, res: Response): Promise<void> 
 
 export const getPublicKey = async (req: Request, res: Response): Promise<void> => {
   try {
-    const privateKey = (process.env.PRIVATE_KEY || '').replace(/\\n/g, '\n');
+    const privateKey = process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : DEFAULT_PRIVATE_KEY;
     const publicKey = crypto.createPublicKey(privateKey).export({ type: 'spki', format: 'pem' });
     res.json({ publicKey });
   } catch (error) {
@@ -157,7 +169,7 @@ export const verifyLicense = async (req: Request, res: Response): Promise<void> 
   if (!machine_id) { res.status(400).json({ error: 'machine_id required' }); return; }
   
   try {
-    const privateKey = (process.env.PRIVATE_KEY || '').replace(/\\n/g, '\n');
+    const privateKey = process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : DEFAULT_PRIVATE_KEY;
     const publicKey = crypto.createPublicKey(privateKey).export({ type: 'spki', format: 'pem' });
 
     if (license_key) {
@@ -253,7 +265,7 @@ export const bindOtp = async (req: Request, res: Response): Promise<void> => {
     let featuresArr = [];
     try { featuresArr = JSON.parse(pkg?.features || '[]'); } catch (e) {}
 
-    const privateKey = (process.env.PRIVATE_KEY || '').replace(/\\n/g, '\n');
+    const privateKey = process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : DEFAULT_PRIVATE_KEY;
 
     const payload = {
       app: otp.app_code,
