@@ -12,6 +12,7 @@ import { IdentityMap } from './pages/IdentityMap';
 import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
+import { KnowledgeBase } from './pages/KnowledgeBase';
 import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
 
@@ -68,6 +69,7 @@ function App() {
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/identity-map" element={<IdentityMap />} />
           <Route path="/licenses" element={<LicenseManager />} />
+          <Route path="/knowledge" element={<KnowledgeBase />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

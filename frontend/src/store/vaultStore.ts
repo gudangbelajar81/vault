@@ -4,7 +4,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 interface VaultState {
   masterPassword: string | null;
   setMasterPassword: (password: string | null) => void;
-  isUnlocked: boolean;
+  isUnlocked: boolean; isCommandOpen: boolean; setCommandOpen: (open: boolean) => void;
 }
 
 export const useVaultStore = create<VaultState>()(
@@ -12,7 +12,7 @@ export const useVaultStore = create<VaultState>()(
     (set) => ({
       masterPassword: null,
       setMasterPassword: (password) => set({ masterPassword: password, isUnlocked: !!password }),
-      isUnlocked: false,
+      isUnlocked: false, isCommandOpen: false, setCommandOpen: (open) => set({ isCommandOpen: open }),
     }),
     {
       name: 'vault-storage',

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet } from 'lucide-react';
+import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
+import { CommandPalette } from '../components/CommandPalette';
+import { Search } from 'lucide-react';
 import { InstallPrompt } from '../components/InstallPrompt';
 
 const navItems = [
-  { to: '/vault', icon: Shield, label: 'Akses Utama' },
-  { to: '/shortcuts', icon: Link2, label: 'Shortcuts' },
-  { to: '/identity-map', icon: Network, label: 'Identity' },
-  { to: '/expenses', icon: Wallet, label: 'Pengeluaran' },
-  { to: '/licenses', icon: Briefcase, label: 'Licenses' },
+  { to: '/vault', icon: Vault, label: 'Akses Utama', activeColor: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  { to: '/shortcuts', icon: Zap, label: 'Shortcuts', activeColor: 'text-yellow-400', glow: 'shadow-yellow-500/20' },
+  { to: '/identity-map', icon: Fingerprint, label: 'Identity', activeColor: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
+  { to: '/expenses', icon: Banknote, label: 'Pengeluaran', activeColor: 'text-green-400', glow: 'shadow-green-500/20' },
+  { to: '/licenses', icon: BadgeCheck, label: 'Licenses', activeColor: 'text-blue-400', glow: 'shadow-blue-500/20' },
+  { to: '/knowledge', icon: Library, label: 'Pustaka', activeColor: 'text-rose-400', glow: 'shadow-rose-500/20' },
 ];
 
 export const DashboardLayout = () => {
@@ -32,7 +35,7 @@ export const DashboardLayout = () => {
   };
   const navigate = useNavigate();
   const location = useLocation();
-  const { setMasterPassword } = useVaultStore();
+  const { setMasterPassword, setCommandOpen } = useVaultStore();
   const handleLogout = () => {
     setMasterPassword(null);
     navigate('/');
@@ -42,10 +45,11 @@ export const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary flex">
+      <CommandPalette />
       {/* Desktop Sidebar (Ultra Compact Icon-Only) */}
       <aside className="hidden md:flex relative z-40 w-20 bg-surface/50 border-r border-border backdrop-blur-xl flex-col items-center py-6">
         <div className="mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 text-bg-primary font-black text-xl">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-orange-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white font-black text-xl border border-white/20">
             V
           </div>
         </div>
@@ -61,7 +65,7 @@ export const DashboardLayout = () => {
                 to={item.to}
                 className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? 'bg-primary/20 text-primary font-semibold shadow-[0_0_15px_rgba(var(--color-primary),0.2)]' 
+                    ? 'bg-gradient-to-br from-emerald-400 to-orange-500 text-white font-semibold shadow-lg shadow-emerald-500/30 border border-white/20' 
                     : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
@@ -136,6 +140,16 @@ export const DashboardLayout = () => {
             <div className="hidden md:block text-sm text-text-muted">Command Center</div>
           </div>
           <div className="flex items-center gap-3">
+            
+            <button 
+              onClick={() => setCommandOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-sm text-text-muted hover:text-text-primary transition-colors hover:border-primary/50 group"
+            >
+              <Search size={16} className="group-hover:text-primary transition-colors" />
+              <span className="hidden sm:inline">Cari data...</span>
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-black/5 dark:bg-white/10 rounded border border-border text-[10px] font-bold">Ctrl+K</kbd>
+            </button>
+            
             <button 
               onClick={toggleTheme}
               className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"

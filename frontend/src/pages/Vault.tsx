@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Plus, Search, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Search, Copy, ExternalLink, Eye, EyeOff, Shield, X, RefreshCw, Star, Upload, Trash2, Edit2 , Fingerprint, ShieldAlert, KeyRound } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -22,13 +22,26 @@ export const Vault = () => {
   // Form State
   const [formData, setFormData] = useState({
     title: '',
-    credentials: [{ id: Date.now().toString(), username: '', password: '' }],
     url: '',
+    mainAccount: { username: '', password: '', extra: '' },
+    credentials: [] as { id: string, username: string, password: string, extra: string }[],
+    apis: [] as { id: string, name: string, key: string, extra: string }[],
     notes: '',
     favorite: false
   });
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [visibleUsernames, setVisibleUsernames] = useState<Record<string, boolean>>({});
+  const [visibleApis, setVisibleApis] = useState<Record<string, boolean>>({});
+
+  const handleCopy = (text: string, label: string) => {
+    if (!text) {
+      toast.error(`${label} kosong`);
+      return;
+    }
+    navigator.clipboard.writeText(text);
+    if (navigator.vibrate) navigator.vibrate(30);
+    toast.success(`${label} disalin!`);
+  };
 
   useEffect(() => {
     fetchItems();
@@ -59,30 +72,47 @@ export const Vault = () => {
     }
   };
 
-  const generatePassword = (id: string) => {
+  const generatePassword = (id: string, type: 'main' | 'cred' = 'cred') => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
     let result = '';
     for (let i = 0; i < 16; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setFormData({
-      ...formData,
-      credentials: formData.credentials.map(c => c.id === id ? { ...c, password: result } : c)
-    });
+    if (type === 'main') {
+      setFormData({ ...formData, mainAccount: { ...formData.mainAccount, password: result } });
+    } else {
+      setFormData({
+        ...formData,
+        credentials: formData.credentials.map(c => c.id === id ? { ...c, password: result } : c)
+      });
+    }
   };
 
   const addCredentialRow = () => {
     setFormData({
       ...formData,
-      credentials: [...formData.credentials, { id: Date.now().toString(), username: '', password: '' }]
+      credentials: [...formData.credentials, { id: Date.now().toString(), username: '', password: '', extra: '' }]
     });
   };
 
   const removeCredentialRow = (id: string) => {
-    if (formData.credentials.length <= 1) return;
     setFormData({
       ...formData,
       credentials: formData.credentials.filter(c => c.id !== id)
+    });
+  };
+
+  const addApiRow = () => {
+    setFormData({
+      ...formData,
+      apis: [...formData.apis, { id: Date.now().toString(), name: '', key: '', extra: '' }]
+    });
+  };
+
+  const removeApiRow = (id: string) => {
+    setFormData({
+      ...formData,
+      apis: formData.apis.filter(a => a.id !== id)
     });
   };
 
@@ -93,11 +123,13 @@ export const Vault = () => {
     setSaving(true);
     try {
       const dataToEncrypt = JSON.stringify({
+        mainAccount: formData.mainAccount,
         credentials: formData.credentials,
+        apis: formData.apis,
         url: formData.url,
         notes: formData.notes,
-        username: formData.credentials[0]?.username || '',
-        password: formData.credentials[0]?.password || '',
+        username: formData.mainAccount.username,
+        password: formData.mainAccount.password,
       });
 
       const encryptedData = await encryptData(dataToEncrypt, masterPassword);
@@ -121,9 +153,10 @@ export const Vault = () => {
 
       setIsModalOpen(false);
       setEditingItemId(null);
-      setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
+      setFormData({ title: '', url: '', mainAccount: { username: '', password: '', extra: '' }, credentials: [], apis: [], notes: '', favorite: false });
       setVisiblePasswords({});
       setVisibleUsernames({});
+      setVisibleApis({});
       fetchItems();
     } catch (error) {
       console.error(error);
@@ -146,19 +179,24 @@ export const Vault = () => {
   };
 
   const openEditModal = (item: any) => {
-    // Determine credentials format (new array or old single format)
-    let creds = [{ id: Date.now().toString(), username: '', password: '' }];
-    if (item.decrypted?.credentials && Array.isArray(item.decrypted.credentials)) {
-      creds = item.decrypted.credentials;
-    } else if (item.decrypted?.username || item.decrypted?.password) {
-      creds = [{ id: Date.now().toString(), username: item.decrypted.username || '', password: item.decrypted.password || '' }];
+    const dec = item.decrypted || {};
+    let mainAccount = dec.mainAccount || { username: dec.username || '', password: dec.password || '', extra: '' };
+    if (!mainAccount.extra) mainAccount.extra = '';
+    let creds = (dec.credentials || []).map((c: any) => ({ ...c, extra: c.extra || '' }));
+    let apis = (dec.apis || []).map((a: any) => ({ ...a, extra: a.extra || '' }));
+
+    if (!dec.mainAccount && creds.length > 0 && creds[0].username === dec.username) {
+      mainAccount = creds[0];
+      creds = creds.slice(1);
     }
 
     setFormData({
       title: item.title,
+      url: dec.url || '',
+      mainAccount,
       credentials: creds,
-      url: item.decrypted?.url || '',
-      notes: item.decrypted?.notes || '',
+      apis,
+      notes: dec.notes || '',
       favorite: item.favorite || false
     });
     setEditingItemId(item.id);
@@ -225,7 +263,7 @@ export const Vault = () => {
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-base font-bold text-text-primary">Password Vault</h2>
-        <div className="flex gap-1.5 md:gap-2">
+        <div className="flex gap-1 md:gap-1">
           <input 
             type="file" 
             accept=".csv" 
@@ -236,7 +274,7 @@ export const Vault = () => {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={importing}
-            className="bg-surface hover:bg-surface/80 border border-border text-text-primary px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 disabled:opacity-50 text-xs"
+            className="bg-surface hover:bg-surface/80 border border-border text-text-primary px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-transform active:scale-95 disabled:opacity-50 text-xs"
             title="Import from Chrome CSV"
           >
             <Upload size={12} />
@@ -245,10 +283,10 @@ export const Vault = () => {
           <button 
             onClick={() => {
               setEditingItemId(null);
-              setFormData({ title: '', credentials: [{ id: Date.now().toString(), username: '', password: '' }], url: '', notes: '', favorite: false });
+              setFormData({ title: '', url: '', mainAccount: { username: '', password: '', extra: '' }, credentials: [], apis: [], notes: '', favorite: false });
               setIsModalOpen(true);
             }}
-            className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
+            className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-transform active:scale-95 shadow-[0_0_10px_rgba(var(--color-primary),0.3)] text-xs"
           >
             <Plus size={12} />
             <span className="hidden sm:inline">New Item</span>
@@ -258,7 +296,7 @@ export const Vault = () => {
       </div>
 
       {/* Search & Filter bar */}
-      <div className="flex gap-4 mb-3">
+      <div className="flex gap-2 mb-3">
         <div className="relative flex-1 w-full">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input 
@@ -295,7 +333,7 @@ export const Vault = () => {
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-2 px-2 md:py-0 md:px-0 border-b border-border/50 md:border-none">
                     <td className="flex-1 md:flex-none p-0 md:px-3 md:py-2 cursor-pointer group-hover:bg-black/5 dark:group-hover:bg-white/5" onClick={() => openEditModal(item)}>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <div className="h-8 w-8 rounded-md bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                           {item.title.charAt(0).toUpperCase()}
                         </div>
@@ -324,7 +362,7 @@ export const Vault = () => {
                       {new Date(item.updatedAt).toLocaleDateString()}
                     </td>
                     <td className="flex-none p-0 md:px-6 md:py-4 text-right">
-                      <div className="flex items-center justify-end gap-0.5 md:gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 md:gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => {
                             const pwToCopy = item.decrypted?.password || item.decrypted?.credentials?.[0]?.password;
@@ -367,7 +405,7 @@ export const Vault = () => {
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/20 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-1 sm:p-4">
           <div className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center p-3 border-b border-border">
               <h3 className="text-sm font-bold text-text-primary">{editingItemId ? 'Edit Vault Item' : 'Add New Vault Item'}</h3>
@@ -382,61 +420,198 @@ export const Vault = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-3 flex-1 overflow-y-auto flex flex-col gap-2">
+            <form onSubmit={handleSave} className="p-3 flex-1 overflow-y-auto flex flex-col gap-1">
+              {/* 1. Nama Web */}
               <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Title *</label>
                 <input 
                   type="text" 
-                  value={formData.title}
+                  placeholder="Judul / Nama *"
+                      value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   required
-                  placeholder="e.g. Netflix, Github, Bank..."
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
 
-              <div className="space-y-3">
+              {/* 2. Link Web */}
+              <div>
+                <div className="flex gap-1">
+                  <input 
+                    type="url" 
+                    placeholder="Link Web (Opsional)"
+                      value={formData.url}
+                    onChange={(e) => setFormData({...formData, url: e.target.value})}
+                    
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (formData.url) {
+                        window.open(formData.url.startsWith('http') ? formData.url : `https://${formData.url}`, '_blank');
+                      }
+                    }}
+                    disabled={!formData.url}
+                    className="bg-surface border border-border hover:bg-surface/80 text-info px-2.5 rounded-lg transition-colors flex items-center justify-center shrink-0 disabled:opacity-50"
+                    title="Buka Link Web"
+                  >
+                    <ExternalLink size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Akun yang dipakai (Gmail & Password) */}
+              <div className="p-2.5 bg-black/5 dark:bg-primary/5 border border-primary/20 rounded-xl relative group">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1"><Fingerprint size={12}/> AKUN UTAMA (GMAIL & PASSWORD)</span>
+                  <button 
+                    type="button"
+                    onClick={() => window.open('https://mail.google.com', '_blank')}
+                    className="text-[9px] bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded font-bold flex items-center gap-1 transition-colors"
+                  >
+                    Buka Gmail
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-12 gap-1">
+                  <div className="col-span-12 md:col-span-4 flex gap-1">
+                    <input 
+                      type="text"
+                      value={formData.mainAccount.extra}
+                      onChange={(e) => setFormData({...formData, mainAccount: {...formData.mainAccount, extra: e.target.value}})}
+                      placeholder="ID / Endpoint"
+                      className="w-full bg-surface/50 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
+                  </div>
+                  <div className="col-span-12 md:col-span-4 relative flex gap-1">
+                    <div className="relative flex-1">
+                      <input 
+                        type={visibleUsernames['main'] === false ? "password" : "text"} 
+                        value={formData.mainAccount.username}
+                        onChange={(e) => setFormData({...formData, mainAccount: {...formData.mainAccount, username: e.target.value}})}
+                        placeholder="Gmail / Email / Username"
+                        className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setVisibleUsernames(prev => ({...prev, main: prev.main === false ? true : false}))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                      >
+                        {visibleUsernames['main'] === false ? <Eye size={12} /> : <EyeOff size={12} />}
+                      </button>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => handleCopy(formData.mainAccount.username, 'Akun Utama')}
+                      className="bg-surface border border-border hover:bg-surface/80 text-text-muted hover:text-primary px-2 rounded-lg transition-colors shrink-0"
+                      title="Copy Akun"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  </div>
+                  
+                  <div className="col-span-12 md:col-span-4 flex gap-1">
+                    <div className="relative flex-1">
+                      <input 
+                        type={visiblePasswords['main'] === false ? "password" : "text"}
+                        value={formData.mainAccount.password}
+                        onChange={(e) => setFormData({...formData, mainAccount: {...formData.mainAccount, password: e.target.value}})}
+                        placeholder="Password"
+                        className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setVisiblePasswords(prev => ({...prev, main: prev.main === false ? true : false}))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                      >
+                        {visiblePasswords['main'] === false ? <Eye size={12} /> : <EyeOff size={12} />}
+                      </button>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => generatePassword('main', 'main')}
+                      className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors shrink-0"
+                      title="Generate Password"
+                    >
+                      <RefreshCw size={12} />
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleCopy(formData.mainAccount.password, 'Password Utama')}
+                      className="bg-surface border border-border hover:bg-surface/80 text-text-muted hover:text-primary px-2 rounded-lg transition-colors shrink-0"
+                      title="Copy Password"
+                    >
+                      <Copy size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Credential Tambahan */}
+              <div className="space-y-2">
                 {formData.credentials.map((cred, index) => (
                   <div key={cred.id} className="p-2.5 bg-black/5 dark:bg-black/20 border border-border/50 rounded-xl relative group">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Credential {index + 1}</span>
-                      {formData.credentials.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeCredentialRow(cred.id)}
-                          className="text-danger hover:bg-danger/10 p-1 rounded transition-colors"
-                          title="Hapus baris ini"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
+                      <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-1"><KeyRound size={10}/> Credential {index + 1}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => removeCredentialRow(cred.id)}
+                        className="text-danger hover:bg-danger/10 p-1 rounded transition-colors"
+                        title="Hapus baris ini"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="relative">
+                    <div className="grid grid-cols-12 gap-1">
+                      <div className="flex gap-1">
                         <input 
-                          type={visibleUsernames[cred.id] ? "text" : "password"} 
-                          value={cred.username}
+                          type="text" 
+                          value={cred.extra}
                           onChange={(e) => {
                             const newCreds = [...formData.credentials];
-                            newCreds[index].username = e.target.value;
+                            newCreds[index].extra = e.target.value;
                             setFormData({...formData, credentials: newCreds});
                           }}
-                          placeholder="Username / Email"
-                          className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                          placeholder="ID / Endpoint"
+                          className="w-full bg-surface/50 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         />
-                        <button 
-                          type="button" 
-                          onClick={() => setVisibleUsernames(prev => ({...prev, [cred.id]: !prev[cred.id]}))}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
-                        >
-                          {visibleUsernames[cred.id] ? <EyeOff size={12} /> : <Eye size={12} />}
-                        </button>
                       </div>
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1">
                         <div className="relative flex-1">
                           <input 
-                            type={visiblePasswords[cred.id] ? "text" : "password"}
+                            type={visibleUsernames[cred.id] === false ? "password" : "text"} 
+                            value={cred.username}
+                            onChange={(e) => {
+                              const newCreds = [...formData.credentials];
+                              newCreds[index].username = e.target.value;
+                              setFormData({...formData, credentials: newCreds});
+                            }}
+                            placeholder="Username / Email"
+                            className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setVisibleUsernames(prev => ({...prev, [cred.id]: prev[cred.id] === false ? true : false}))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                          >
+                            {visibleUsernames[cred.id] === false ? <Eye size={12} /> : <EyeOff size={12} />}
+                          </button>
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => handleCopy(cred.username, 'Credential Username')}
+                          className="bg-surface border border-border hover:bg-surface/80 text-text-muted hover:text-primary px-2 rounded-lg transition-colors shrink-0"
+                          title="Copy Username"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="relative flex-1">
+                          <input 
+                            type={visiblePasswords[cred.id] === false ? "password" : "text"}
                             value={cred.password}
                             onChange={(e) => {
                               const newCreds = [...formData.credentials];
@@ -448,19 +623,27 @@ export const Vault = () => {
                           />
                           <button 
                             type="button" 
-                            onClick={() => setVisiblePasswords(prev => ({...prev, [cred.id]: !prev[cred.id]}))}
+                            onClick={() => setVisiblePasswords(prev => ({...prev, [cred.id]: prev[cred.id] === false ? true : false}))}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
                           >
-                            {visiblePasswords[cred.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                            {visiblePasswords[cred.id] === false ? <Eye size={12} /> : <EyeOff size={12} />}
                           </button>
                         </div>
                         <button 
                           type="button"
-                          onClick={() => generatePassword(cred.id)}
-                          className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                          onClick={() => generatePassword(cred.id, 'cred')}
+                          className="bg-surface border border-border hover:bg-surface/80 text-primary px-2 rounded-lg transition-colors shrink-0"
                           title="Generate Password"
                         >
                           <RefreshCw size={12} />
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => handleCopy(cred.password, 'Credential Password')}
+                          className="bg-surface border border-border hover:bg-surface/80 text-text-muted hover:text-primary px-2 rounded-lg transition-colors shrink-0"
+                          title="Copy Password"
+                        >
+                          <Copy size={12} />
                         </button>
                       </div>
                     </div>
@@ -470,35 +653,114 @@ export const Vault = () => {
                 <button 
                   type="button"
                   onClick={addCredentialRow}
-                  className="w-full border border-dashed border-border hover:border-primary/50 text-text-muted hover:text-primary bg-transparent hover:bg-primary/5 py-1.5 rounded-xl transition-colors text-xs font-medium flex items-center justify-center gap-1.5"
+                  className="w-full border border-dashed border-border hover:border-primary/50 text-text-muted hover:text-primary bg-transparent hover:bg-primary/5 py-1.5 rounded-xl transition-colors text-[11px] font-medium flex items-center justify-center gap-1"
                 >
                   <Plus size={12} />
-                  Tambah Baris Akun
+                  Tambah Credential Tambahan
                 </button>
               </div>
 
-              <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Website URL</label>
-                <input 
-                  type="url" 
-                  value={formData.url}
-                  onChange={(e) => setFormData({...formData, url: e.target.value})}
-                  placeholder="https://..."
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                />
+              {/* 5. Nama API & API Key */}
+              <div className="space-y-2">
+                {formData.apis.map((api, index) => (
+                  <div key={api.id} className="p-2.5 bg-black/5 dark:bg-info/5 border border-info/20 rounded-xl relative group">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold text-info uppercase tracking-wider">API {index + 1}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => removeApiRow(api.id)}
+                        className="text-danger hover:bg-danger/10 p-1 rounded transition-colors"
+                        title="Hapus baris ini"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-12 gap-1">
+                      <div className="flex gap-1">
+                        <input 
+                          type="text" 
+                          value={api.extra}
+                          onChange={(e) => {
+                            const newApis = [...formData.apis];
+                            newApis[index].extra = e.target.value;
+                            setFormData({...formData, apis: newApis});
+                          }}
+                          placeholder="ID / Endpoint"
+                          className="w-full bg-surface/50 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <input 
+                          type="text" 
+                          placeholder="Nama API / Access"
+                          value={api.name}
+                          onChange={(e) => {
+                            const newApis = [...formData.apis];
+                            newApis[index].name = e.target.value;
+                            setFormData({...formData, apis: newApis});
+                          }}
+                          
+                          className="w-full bg-surface/50 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="relative flex-1">
+                          <input 
+                            type={visibleApis[api.id] === false ? "password" : "text"}
+                            placeholder="Token / API Key"
+                          value={api.key}
+                            onChange={(e) => {
+                              const newApis = [...formData.apis];
+                              newApis[index].key = e.target.value;
+                              setFormData({...formData, apis: newApis});
+                            }}
+                            
+                            className="w-full bg-surface/50 border border-border rounded-lg px-2.5 py-1.5 pr-7 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setVisibleApis(prev => ({...prev, [api.id]: prev[api.id] === false ? true : false}))}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
+                          >
+                            {visibleApis[api.id] === false ? <Eye size={12} /> : <EyeOff size={12} />}
+                          </button>
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => handleCopy(api.key, 'API Key')}
+                          className="bg-surface border border-border hover:bg-surface/80 text-text-muted hover:text-primary px-2 rounded-lg transition-colors shrink-0"
+                          title="Copy API Key"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button 
+                  type="button"
+                  onClick={addApiRow}
+                  className="w-full border border-dashed border-border hover:border-info/50 text-text-muted hover:text-info bg-transparent hover:bg-info/5 py-1.5 rounded-xl transition-colors text-[11px] font-medium flex items-center justify-center gap-1"
+                >
+                  <Plus size={12} />
+                  Tambah Kunci API
+                </button>
               </div>
 
+              {/* 6. Note */}
               <div>
-                <label className="text-[10px] font-medium text-text-muted mb-0.5 block">Notes (Secure)</label>
                 <textarea 
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  rows={2}
-                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-3 py-1.5 text-xs text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+                  rows={3}
+                  placeholder="Catatan rahasia tambahan..."
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 mt-1">
+              <div className="flex items-center gap-1 mt-1">
                 <input 
                   type="checkbox" 
                   id="favorite"
@@ -512,7 +774,7 @@ export const Vault = () => {
               </div>
             </form>
 
-            <div className="p-3 border-t border-border flex justify-end gap-2 bg-surface/30">
+            <div className="p-3 border-t border-border flex justify-end gap-1 bg-surface/30">
               <button 
                 type="button"
                 onClick={() => {
