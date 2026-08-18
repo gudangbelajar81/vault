@@ -474,8 +474,8 @@ export const Vault = () => {
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-12 gap-1">
-                  <div className="col-span-12 md:col-span-4 flex gap-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="flex gap-1">
                     <input 
                       type="text"
                       value={formData.mainAccount.extra}
@@ -484,7 +484,7 @@ export const Vault = () => {
                       className="w-full bg-surface/50 border border-border rounded-lg px-2 py-1 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
-                  <div className="col-span-12 md:col-span-4 relative flex gap-1">
+                  <div className="relative flex gap-1">
                     <div className="relative flex-1">
                       <input 
                         type={visibleUsernames['main'] === false ? "password" : "text"} 
@@ -511,7 +511,7 @@ export const Vault = () => {
                     </button>
                   </div>
                   
-                  <div className="col-span-12 md:col-span-4 flex gap-1">
+                  <div className="flex gap-1">
                     <div className="relative flex-1">
                       <input 
                         type={visiblePasswords['main'] === false ? "password" : "text"}
@@ -564,7 +564,7 @@ export const Vault = () => {
                       </button>
                     </div>
                     
-                    <div className="grid grid-cols-12 gap-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="flex gap-1">
                         <input 
                           type="text" 
@@ -676,7 +676,7 @@ export const Vault = () => {
                       </button>
                     </div>
                     
-                    <div className="grid grid-cols-12 gap-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="flex gap-1">
                         <input 
                           type="text" 
