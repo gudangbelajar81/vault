@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library } from 'lucide-react';
+import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
 import { CommandPalette } from '../components/CommandPalette';
 import { Search } from 'lucide-react';
 import { InstallPrompt } from '../components/InstallPrompt';
+import { UpdateManager, performHardRefresh } from '../components/UpdateManager';
 
 const navItems = [
   { to: '/vault', icon: Vault, label: 'Akses Utama', activeColor: 'text-purple-400', glow: 'shadow-purple-500/20' },
@@ -19,6 +20,8 @@ export const DashboardLayout = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
   });
+  const [hasUpdate, setHasUpdate] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -46,6 +49,7 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary flex">
       <CommandPalette />
+      <UpdateManager onUpdateStateChange={setHasUpdate} />
       {/* Desktop Sidebar (Ultra Compact Icon-Only) */}
       <aside className="hidden md:flex relative z-40 w-20 bg-surface/50 border-r border-border backdrop-blur-xl flex-col items-center py-6">
         <div className="mb-8">
@@ -83,6 +87,30 @@ export const DashboardLayout = () => {
         </nav>
 
         <div className="pt-4 border-t border-border space-y-4 mt-auto">
+          {/* Tombol Refresh & Hapus Cache (Sidebar Desktop) */}
+          <button 
+            onClick={() => {
+              setIsRefreshing(true);
+              performHardRefresh();
+            }}
+            className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
+              hasUpdate 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-500/20 animate-pulse' 
+                : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+            title="Refresh & Clear Cache Chrome"
+          >
+            <RefreshCw size={22} className={isRefreshing ? "animate-spin" : ""} />
+            {hasUpdate && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+            {/* Tooltip Refresh */}
+            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
+              {hasUpdate ? '⚠️ Update Baru! Klik Hard Refresh' : 'Refresh & Hapus Cache'}
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
+            </span>
+          </button>
+
           <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -150,6 +178,21 @@ export const DashboardLayout = () => {
               <kbd className="hidden sm:inline-block px-1.5 py-0.5 bg-black/5 dark:bg-white/10 rounded border border-border text-[10px] font-bold">Ctrl+K</kbd>
             </button>
             
+            {/* Refresh & Clear Cache Button (Mobile Top Header) */}
+            <button 
+              onClick={() => {
+                setIsRefreshing(true);
+                performHardRefresh();
+              }}
+              className="md:hidden relative flex items-center justify-center w-8 h-8 rounded-full text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              title="Refresh & Clear Cache Chrome"
+            >
+              <RefreshCw size={18} className={isRefreshing ? "animate-spin text-emerald-400" : ""} />
+              {hasUpdate && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              )}
+            </button>
+
             <button 
               onClick={toggleTheme}
               className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"

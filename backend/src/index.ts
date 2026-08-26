@@ -36,6 +36,11 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Backend is healthy!' });
 });
 
+// Version Check Endpoint
+app.get('/api/version', (req, res) => {
+  res.status(200).json({ version: '1.0.6', buildTime: 1740588000000 });
+});
+
 // Logs Endpoint for Debugging VPS
 app.get('/api/logs', (req, res) => {
   const fs = require('fs');
