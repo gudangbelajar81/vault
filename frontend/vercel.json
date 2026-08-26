@@ -4,6 +4,10 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://77.42.77.29/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
