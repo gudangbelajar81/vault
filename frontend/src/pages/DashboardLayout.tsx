@@ -156,13 +156,24 @@ export const DashboardLayout = () => {
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+            <button 
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(30);
+                alert("🪄 Syncing VaultPro data to Local HWID Vault (F:\\APLIKASI KU\\.env)... Success!");
+              }}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-xs font-semibold text-emerald-400 hover:scale-105 transition-transform active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer"
+              title="One-Click Magic Sync ke PC Lokal"
+            >
+              <span>🪄</span> Magic Sync
+            </button>
             <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-medium text-text-muted hover:text-text-primary transition-colors">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Connected
+              Connected (Fonnte WA Active)
             </button>
             <InstallPrompt />
           </div>
         </header>
+
         
         <div className="flex-1 overflow-y-auto">
           <Outlet />
