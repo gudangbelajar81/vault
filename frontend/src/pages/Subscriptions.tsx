@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
-import { Plus, X, CreditCard, Calendar, TrendingUp, AlertCircle, Edit2, Trash2, CheckCircle, PauseCircle } from 'lucide-react';
+import { Plus, X, CreditCard, Calendar, TrendingUp, AlertCircle, Edit2, Trash2, CheckCircle, PauseCircle, ExternalLink, Copy, Eye, EyeOff, Lock } from 'lucide-react';
+import { useVaultStore } from '../store/vaultStore';
+import { encryptData, decryptData } from '../utils/crypto';
+import toast from 'react-hot-toast';
 
 interface Subscription {
   id: string;
@@ -12,6 +15,8 @@ interface Subscription {
   nextBillingDate: string;
   status: string;
   accountEmail?: string;
+  encryptedNotes?: string;
+  decryptedNotes?: any;
 }
 
 const API = `${API_URL}/api/subscriptions`;
@@ -60,9 +65,11 @@ const getDueBadge = (days: number, status: string) => {
   return <span className="text-xs text-text-muted">{days} hari lagi</span>;
 };
 
-const getEmptyForm = () => ({ id: Date.now().toString() + Math.random(), name: '', price: '' as number | '', currency: 'IDR', billingCycle: 'monthly', nextBillingDate: '', status: 'active', accountEmail: '' });
+const getEmptyForm = () => ({ id: Date.now().toString() + Math.random(), name: '', price: '' as number | '', currency: 'IDR', billingCycle: 'monthly', nextBillingDate: '', status: 'active', accountEmail: '', url: '', password: '' });
 
 export const Subscriptions = () => {
+  const { masterPassword } = useVaultStore();
+  const [showPasswordMap, setShowPasswordMap] = useState<Record<string, boolean>>({});
   const [items, setItems] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,7 +80,20 @@ export const Subscriptions = () => {
   const fetchItems = async () => {
     try {
       const res = await axios.get(API, { withCredentials: true });
-      setItems(res.data.data || []);
+      const itemsList = res.data.data || [];
+      
+      // Decrypt notes if available
+      if (masterPassword) {
+        for (const item of itemsList) {
+          if (item.encryptedNotes) {
+            try {
+              const decrypted = await decryptData(item.encryptedNotes, masterPassword);
+              item.decryptedNotes = JSON.parse(decrypted);
+            } catch(e) {}
+          }
+        }
+      }
+      setItems(itemsList);
     } catch (error) {
       console.error(error);
     } finally {
@@ -81,43 +101,66 @@ export const Subscriptions = () => {
     }
   };
 
+
+
   useEffect(() => { fetchItems(); }, []);
 
   const openAdd = () => { setEditId(null); setFormsData([getEmptyForm()]); setIsModalOpen(true); };
-  const openEdit = (sub: Subscription) => {
-    setEditId(sub.id);
-    setFormsData([{
-      id: sub.id,
-      name: sub.name,
-      price: sub.price,
-      currency: sub.currency,
-      billingCycle: sub.billingCycle,
-      nextBillingDate: sub.nextBillingDate.split('T')[0],
-      status: sub.status,
-      accountEmail: sub.accountEmail || '',
-    }]);
-    setIsModalOpen(true);
-  };
+
+    const openEdit = (sub: Subscription) => {
+      setEditId(sub.id);
+      setFormsData([{
+        id: sub.id,
+        name: sub.name,
+        price: sub.price,
+        currency: sub.currency,
+        billingCycle: sub.billingCycle,
+        nextBillingDate: sub.nextBillingDate.split('T')[0],
+        status: sub.status,
+        accountEmail: sub.accountEmail || '',
+        url: sub.decryptedNotes?.url || '',
+        password: sub.decryptedNotes?.password || '',
+      }]);
+      setIsModalOpen(true);
+    };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
+      const processedForms = await Promise.all(formsData.map(async (data: any) => {
+        let encryptedNotes = '';
+        if (data.url || data.password) {
+          if (!masterPassword) {
+            throw new Error('Master password diperlukan untuk enkripsi');
+          }
+          const notesObj = { url: data.url, password: data.password };
+          encryptedNotes = await encryptData(JSON.stringify(notesObj), masterPassword);
+        }
+        
+        return {
+          ...data,
+          encryptedNotes: encryptedNotes || undefined
+        };
+      }));
+
       if (editId) {
-        await axios.put(`${API}/${editId}`, formsData[0], { withCredentials: true });
+        await axios.put(`${API}/${editId}`, processedForms[0], { withCredentials: true });
       } else {
         await Promise.all(
-          formsData.map(data => axios.post(API, data, { withCredentials: true }))
+          processedForms.map(data => axios.post(API, data, { withCredentials: true }))
         );
       }
       setIsModalOpen(false);
       fetchItems();
-    } catch (error) {
-      alert('Gagal menyimpan data');
+    } catch (error: any) {
+      alert(error.message || 'Gagal menyimpan data');
     } finally {
       setSaving(false);
     }
   };
+
+
 
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Hapus langganan "${name}"?`)) return;
@@ -277,9 +320,8 @@ export const Subscriptions = () => {
                       </button>
                     </div>
                   )}
-
-                  {/* Baris 1 (3 form) */}
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Baris 1 (4 form) */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <div>
                       <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Nama Layanan *</label>
                       <input
@@ -308,9 +350,9 @@ export const Subscriptions = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Email</label>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Email Akun</label>
                       <input
-                        type="email" value={formData.accountEmail}
+                        type="email" value={formData.accountEmail || ''}
                         onChange={(e) => {
                           const newForms = [...formsData];
                           newForms[index].accountEmail = e.target.value;
@@ -320,7 +362,42 @@ export const Subscriptions = () => {
                         className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                       />
                     </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-text-muted mb-0.5 flex items-center gap-1"><Lock size={10}/> Password</label>
+                      <div className="relative">
+                        <input
+                          type={showPasswordMap['form_'+index] ? "text" : "password"} 
+                          value={formData.password || ''}
+                          onChange={(e) => {
+                            const newForms = [...formsData];
+                            newForms[index].password = e.target.value;
+                            setFormsData(newForms);
+                          }}
+                          placeholder="***"
+                          className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg pl-2 pr-7 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        />
+                        <button type="button" onClick={() => setShowPasswordMap({...showPasswordMap, ['form_'+index]: !showPasswordMap['form_'+index]})} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
+                          {showPasswordMap['form_'+index] ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* URL Akses */}
+                  <div className="mt-2 mb-2">
+                    <label className="text-[10px] font-medium text-text-muted mb-0.5 block truncate">Link Akses URL</label>
+                    <input
+                      type="url" value={formData.url || ''}
+                      onChange={(e) => {
+                        const newForms = [...formsData];
+                        newForms[index].url = e.target.value;
+                        setFormsData(newForms);
+                      }}
+                      placeholder="https://netflix.com/login"
+                      className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-2 py-1.5 text-[11px] text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    />
+                  </div>
+
 
                   {/* Baris 2 (4 form) */}
                   <div className="grid grid-cols-4 gap-2">
