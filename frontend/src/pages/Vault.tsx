@@ -8,9 +8,26 @@ import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 
 export const Vault = () => {
+
   const { masterPassword } = useVaultStore();
+
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  const filteredItems = items.filter(item => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    const titleMatch = item.title?.toLowerCase().includes(s);
+    const userMatch = item.decrypted?.username?.toLowerCase().includes(s);
+    const urlMatch = item.decrypted?.url?.toLowerCase().includes(s);
+    const descMatch = item.decrypted?.description?.toLowerCase().includes(s);
+    return titleMatch || userMatch || urlMatch || descMatch;
+  });
+
+
+
+
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -294,17 +311,21 @@ export const Vault = () => {
         </div>
       </div>
 
-      {/* Search & Filter bar */}
-      <div className="flex gap-2 mb-3">
-        <div className="relative flex-1 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          <input 
-            type="text" 
-            placeholder="Search vault..." 
-            className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-          />
+        {/* Search & Filter bar */}
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1 w-full">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input 
+              type="text" 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Cari password, username, url..." 
+              className="w-full bg-surface/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            />
+          </div>
         </div>
-      </div>
+
+
 
       {/* Vault List */}
       <div className="flex-1 bg-surface/50 border border-border rounded-lg overflow-hidden backdrop-blur-xl flex flex-col">
@@ -312,7 +333,10 @@ export const Vault = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
           </div>
-        ) : items.length === 0 ? (
+
+          ) : filteredItems.length === 0 ? (
+
+
           <div className="flex-1 flex items-center justify-center flex-col text-text-muted py-10 opacity-50">
             <Shield size={32} className="mb-2" />
             <p className="text-xs">Vault masih kosong.</p>
@@ -328,9 +352,14 @@ export const Vault = () => {
                   <th className="px-3 py-2 text-right text-[10px] font-semibold text-text-muted uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border block md:table-row-group">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-2 px-2 md:py-0 md:px-0 border-b border-border/50 md:border-none">
+
+                <tbody className="divide-y divide-border block md:table-row-group">
+                  {filteredItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group flex md:table-row items-center justify-between py-2 px-2 md:py-0 md:px-0 border-b border-border/50 md:border-none">
+
+
+
+
                     <td className="flex-1 md:flex-none p-0 md:px-3 md:py-2 cursor-pointer group-hover:bg-black/5 dark:group-hover:bg-white/5" onClick={() => openEditModal(item)}>
                       <div className="flex items-center gap-1">
                         <div className="h-8 w-8 rounded-md bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
