@@ -129,3 +129,4 @@ RINGKASAN: [1 kalimat singkat tentang isi atau tujuan konten ini]`;
   );
 };
 
+

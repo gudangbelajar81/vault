@@ -415,14 +415,17 @@ export const Settings = () => {
 
           <div className="flex flex-col gap-4">
             <div>
-              <label className="text-sm font-medium text-text-muted mb-1 block">Groq API Key</label>
-              <input 
-                type="password" 
+              <label className="text-sm font-medium text-text-muted mb-1 block">Groq API Keys (Sistem Rotasi Cerdas)</label>
+              <textarea 
                 value={groqApiKey}
                 onChange={e => setGroqApiKey(e.target.value)}
-                placeholder="gsk_..."
-                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                placeholder="gsk_xxxxx1...&#10;gsk_xxxxx2...&#10;(Pisahkan tiap kunci dengan baris baru untuk fitur Auto-Failover)"
+                rows={4}
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all resize-y"
               />
+              <p className="text-[10px] text-text-muted mt-1">
+                *Masukkan beberapa kunci sekaligus. Jika kunci pertama limit/habis, sistem akan otomatis merotasi ke kunci berikutnya.
+              </p>
             </div>
 
             <button 
