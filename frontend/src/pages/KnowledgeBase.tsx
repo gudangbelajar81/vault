@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Library, Plus, Search, Link2, Book, MessageSquare, ExternalLink, 
-  Trash2, FileDown, Edit3, Image as ImageIcon 
+  Trash2, FileDown, Edit3, Image as ImageIcon, Mic 
 } from 'lucide-react';
+import { VoiceRecorderModal } from '../components/VoiceRecorderModal';
 import axios from 'axios';
 import { useVaultStore } from '../store/vaultStore';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -31,6 +32,7 @@ export const KnowledgeBase: React.FC = () => {
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form State
@@ -191,6 +193,13 @@ export const KnowledgeBase: React.FC = () => {
             <FileDown size={18} />
             Export CSV
           </button>
+                    <button 
+            onClick={() => setIsVoiceModalOpen(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-sm font-bold shadow-lg shadow-purple-500/30 transition-all"
+          >
+            <Mic size={18} />
+            Voice Note AI
+          </button>
           <button 
             onClick={openAddModal}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white text-sm font-bold shadow-lg shadow-rose-500/30 transition-all"
@@ -322,7 +331,7 @@ export const KnowledgeBase: React.FC = () => {
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl text-text-muted transition-colors">
                 <Trash2 size={20} className="hidden" /> {/* Dummy spacing */}
-                <span className="font-black">✕</span>
+                <span className="font-black">âœ•</span>
               </button>
             </div>
             
@@ -410,6 +419,14 @@ export const KnowledgeBase: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Voice Recorder Modal */}
+      {isVoiceModalOpen && (
+        <VoiceRecorderModal 
+          onClose={() => setIsVoiceModalOpen(false)} 
+          onSuccess={fetchItems} 
+        />
+      )}
     </div>
   );
 };
+
