@@ -12,6 +12,7 @@ export const SubscriptionAlarm = () => {
   useEffect(() => {
     // Inisialisasi audio
     audioRef.current = new Audio(ALARM_SOUND);
+    audioRef.current.loop = true; // Loop sampai ditutup atau dibayar
     
     // Minta izin notifikasi browser jika belum
     if (Notification.permission === 'default') {
@@ -44,8 +45,7 @@ export const SubscriptionAlarm = () => {
             const timeSinceLastAlarm = Date.now() - lastAlarmTime;
 
             if (timeSinceLastAlarm >= ALARM_INTERVAL_MS) {
-              // Trigger Alaram
-              triggerAlarm(item.name, diffDays);
+              triggerAlarm(item, diffDays);
               localStorage.setItem(lastAlarmKey, Date.now().toString());
             }
           }
@@ -55,36 +55,96 @@ export const SubscriptionAlarm = () => {
       }
     };
 
-    const triggerAlarm = (name: string, days: number) => {
-      const title = `🚨 Tagihan Jatuh Tempo!`;
-      const body = `Langganan ${name} jatuh tempo dalam ${days === 0 ? 'HARI INI' : days + ' hari'}.`;
-      
-      // Toast notifikasi dalam app
-      toast.error(body, {
-        duration: 10000,
-        icon: '🚨',
-        style: { border: '2px solid red' }
-      });
-
-      // Browser Notification (jika diluar app/background)
-      if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: '/vite.svg' });
+    const handlePay = async (item: any, toastId: string) => {
+      try {
+        const nextDate = new Date(item.nextBillingDate);
+        if (item.billingCycle === 'yearly') {
+          nextDate.setFullYear(nextDate.getFullYear() + 1);
+        } else {
+          nextDate.setMonth(nextDate.getMonth() + 1);
+        }
+        
+        await axios.put(`${API_URL}/api/subscriptions/${item.id}`, {
+          ...item,
+          nextBillingDate: nextDate.toISOString().split('T')[0]
+        }, { withCredentials: true });
+        
+        toast.success(`Langganan ${item.name} berhasil diperpanjang ke siklus berikutnya!`);
+        toast.dismiss(toastId);
+        
+        if(audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+      } catch (error) {
+        toast.error('Gagal memperbarui tagihan');
       }
+    };
 
+    const triggerAlarm = (item: any, days: number) => {
+      const title = `🚨 Tagihan Jatuh Tempo!`;
+      const body = `Langganan ${item.name} jatuh tempo dalam ${days === 0 ? 'HARI INI' : days + ' hari'}.`;
+      
       // Bunyikan suara
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
+      }
+
+      // Toast notifikasi interaktif dalam app
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-sm w-full bg-surface border-2 border-danger shadow-[0_0_20px_rgba(239,68,68,0.3)] rounded-xl pointer-events-auto flex flex-col p-4`}
+        >
+          <div className="flex items-start">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-danger animate-pulse">🚨 Tagihan Mendesak!</p>
+              <p className="mt-1 text-xs text-text-primary">
+                Langganan <span className="font-bold">{item.name}</span> jatuh tempo {days === 0 ? 'HARI INI' : `dalam ${days} hari`}.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                if (audioRef.current) {
+                   audioRef.current.pause();
+                   audioRef.current.currentTime = 0;
+                }
+              }}
+              className="flex-1 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-text-primary px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors border border-border"
+            >
+              Ingatkan Nanti
+            </button>
+            <button
+              onClick={() => handlePay(item, t.id)}
+              className="flex-1 bg-danger hover:bg-danger/90 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors shadow-lg shadow-danger/20"
+            >
+              Tandai Dibayar
+            </button>
+          </div>
+        </div>
+      ), { duration: 60000, id: `alarm_${item.id}` }); // Tampil 1 menit
+
+      // Browser Notification (jika diluar app/background)
+      if (Notification.permission === 'granted') {
+        const notif = new Notification(title, { body, icon: '/vite.svg' });
+        notif.onclick = () => {
+          window.focus();
+        };
       }
     };
 
     // Cek saat pertama kali komponen dimuat
     checkSubscriptions();
 
-    // Cek setiap 1 menit (siapa tau pergantian hari atau sudah lewat 6 jam saat app sedang terbuka)
+    // Cek setiap 1 menit
     const interval = setInterval(checkSubscriptions, 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  return null; // Komponen berjalan di background, tidak render UI
+  return null;
 };
