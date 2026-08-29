@@ -13,6 +13,7 @@ export const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [masterPassword, setMasterPasswordLocal] = useState('');
+  const [hasSavedMaster, setHasSavedMaster] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showMasterPassword, setShowMasterPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,10 +21,16 @@ export const Auth = () => {
   const navigate = useNavigate();
   const { setMasterPassword } = useVaultStore();
 
-  // Try to load saved email on mount
+  // Try to load saved email and master password on mount
   React.useEffect(() => {
     localforage.getItem('savedEmail').then((val) => {
       if (val && typeof val === 'string') setEmail(val);
+    });
+    localforage.getItem('savedMasterPassword').then((val) => {
+      if (val && typeof val === 'string') {
+        setMasterPasswordLocal(val);
+        setHasSavedMaster(true);
+      }
     });
   }, []);
 
@@ -182,32 +189,36 @@ export const Auth = () => {
             </button>
           </div>
           
-          <div className="h-px w-full bg-border my-0.5 md:my-2"></div>
-          
-          <div className="relative">
-            <label className="text-[11px] md:text-sm font-medium text-text-muted mb-1 block">
-              {isRegister ? 'Master Password (Rahasia untuk Enkripsi)' : 'Master Password (Decryption)'}
-            </label>
-            <input 
-              type={showMasterPassword ? "text" : "password"}
-              value={masterPassword}
-              onChange={(e) => setMasterPasswordLocal(e.target.value)}
-              required
-              className="w-full bg-black/5 dark:bg-black/40 border border-primary/50 rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder="Kunci Utama Vault..."
-            />
-            <button 
-              type="button" 
-              onClick={() => setShowMasterPassword(!showMasterPassword)}
-              className="absolute right-2 md:right-3 top-[17px] md:top-8 text-text-muted hover:text-primary transition-colors p-1"
-            >
-              {showMasterPassword ? <EyeOff size={14} className="md:w-4 md:h-4" /> : <Eye size={14} className="md:w-4 md:h-4" />}
-            </button>
-            <p className="text-[10px] md:text-xs text-text-muted mt-1.5 md:mt-2 flex items-center gap-1">
-              <Shield size={12} className="shrink-0" /> 
-              <span>{isRegister ? 'PENTING: Jangan lupakan ini. Jika lupa, data hangus!' : 'Master Password tidak pernah dikirim ke server.'}</span>
-            </p>
-          </div>
+          {(!hasSavedMaster || isRegister) && (
+            <>
+              <div className="h-px w-full bg-border my-0.5 md:my-2"></div>
+              
+              <div className="relative">
+                <label className="text-[11px] md:text-sm font-medium text-text-muted mb-1 block">
+                  {isRegister ? 'Master Password (Rahasia untuk Enkripsi)' : 'Master Password (Decryption)'}
+                </label>
+                <input 
+                  type={showMasterPassword ? "text" : "password"}
+                  value={masterPassword}
+                  onChange={(e) => setMasterPasswordLocal(e.target.value)}
+                  required={!hasSavedMaster || isRegister}
+                  className="w-full bg-black/5 dark:bg-black/40 border border-primary/50 rounded-lg px-2.5 py-1 md:px-4 md:py-3 pr-10 text-[11px] md:text-base text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  placeholder="Kunci Utama Vault..."
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowMasterPassword(!showMasterPassword)}
+                  className="absolute right-2 md:right-3 top-[17px] md:top-8 text-text-muted hover:text-primary transition-colors p-1"
+                >
+                  {showMasterPassword ? <EyeOff size={14} className="md:w-4 md:h-4" /> : <Eye size={14} className="md:w-4 md:h-4" />}
+                </button>
+                <p className="text-[10px] md:text-xs text-text-muted mt-1.5 md:mt-2 flex items-center gap-1">
+                  <Shield size={12} className="shrink-0" /> 
+                  <span>{isRegister ? 'PENTING: Jangan lupakan ini. Jika lupa, data hangus!' : 'Master Password tidak pernah dikirim ke server.'}</span>
+                </p>
+              </div>
+            </>
+          )}
           
           <button 
             type="submit"
