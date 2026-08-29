@@ -29,7 +29,7 @@ export const AppManager = () => {
 
   const fetchItems = async () => {
     try {
-      const res = await axios.get(${API_URL}/api/vault, { withCredentials: true });
+      const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
       if (res.data.success && masterPassword) {
         const decryptedItems = await Promise.all(res.data.data.map(async (item: any) => {
           try {
@@ -71,14 +71,14 @@ export const AppManager = () => {
       const encryptedData = await encryptData(dataToEncrypt, masterPassword);
 
       if (editingItemId) {
-        await axios.put(${API_URL}/api/vault/, {
+        await axios.put(`${API_URL}/api/vault/${editingItemId}`, {
           title: formData.title,
           encryptedData,
           favorite: false
         }, { withCredentials: true });
         toast.success('Berhasil mengubah aplikasi');
       } else {
-        await axios.post(${API_URL}/api/vault, {
+        await axios.post(`${API_URL}/api/vault`, {
           type: 'app_project',
           title: formData.title,
           encryptedData,
@@ -101,7 +101,7 @@ export const AppManager = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Yakin ingin menghapus aplikasi ini?')) return;
     try {
-      await axios.delete(${API_URL}/api/vault/, { withCredentials: true });
+      await axios.delete(`${API_URL}/api/vault/${id}`, { withCredentials: true });
       toast.success('Aplikasi dihapus');
       fetchItems();
     } catch (error) {
@@ -131,12 +131,12 @@ export const AppManager = () => {
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(${label} dicopy!);
+    toast.success(`${label} dicopy!`);
   };
 
   const openUrl = (url: string) => {
     if (url) {
-      window.open(url.startsWith('http') ? url : https://, '_blank');
+      window.open(url.startsWith('http') ? url : `https://${url}`, '_blank');
     }
   };
 
@@ -167,7 +167,7 @@ export const AppManager = () => {
             placeholder="Cari aplikasi..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl pl-9 pr-4 py-2 text-sm text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            className="w-full bg-surface border border-border rounded-xl pl-9 pr-4 py-2 text-sm text-text-primary focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
           />
         </div>
       </div>
@@ -210,10 +210,10 @@ export const AppManager = () => {
                       <div className="flex-1 truncate text-xs text-text-secondary">
                         🌐 {item.decrypted.saasUrl}
                       </div>
-                      <button onClick={() => copyToClipboard(item.decrypted.saasUrl, 'URL')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0">
+                      <button onClick={() => copyToClipboard(item.decrypted.saasUrl, 'URL')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0" title="Copy URL">
                         <Copy size={12} className="text-primary" />
                       </button>
-                      <button onClick={() => openUrl(item.decrypted.saasUrl)} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0">
+                      <button onClick={() => openUrl(item.decrypted.saasUrl)} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0" title="Buka URL">
                         <ExternalLink size={12} className="text-primary" />
                       </button>
                     </div>
@@ -224,7 +224,7 @@ export const AppManager = () => {
                       <div className="flex-1 truncate text-[10px] text-text-secondary font-mono" title={item.decrypted.exePath}>
                         💻 {item.decrypted.exePath}
                       </div>
-                      <button onClick={() => copyToClipboard(item.decrypted.exePath, 'Path EXE')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0">
+                      <button onClick={() => copyToClipboard(item.decrypted.exePath, 'Path EXE')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0" title="Copy Path">
                         <Copy size={12} className="text-primary" />
                       </button>
                     </div>
@@ -235,7 +235,7 @@ export const AppManager = () => {
                       <div className="flex-1 truncate text-[10px] text-text-secondary font-mono" title={item.decrypted.androidPath}>
                         📱 {item.decrypted.androidPath}
                       </div>
-                      <button onClick={() => copyToClipboard(item.decrypted.androidPath, 'Path Android')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0">
+                      <button onClick={() => copyToClipboard(item.decrypted.androidPath, 'Path Android')} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded shrink-0" title="Copy Path">
                         <Copy size={12} className="text-primary" />
                       </button>
                     </div>
