@@ -51,20 +51,19 @@ export const Vault = () => {
     try {
       // Use proxy or full URL
       const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
-      if (res.data.success && masterPassword) {
-        // Decrypt all items
-        const decryptedItems = await Promise.all(res.data.data.map(async (item: any) => {
-          try {
-            const decStr = await decryptData(item.encryptedData, masterPassword);
-            const decData = JSON.parse(decStr);
-            return { ...item, decrypted: decData };
-          } catch (e) {
-            console.error('Decryption failed for item', item.id);
-            return { ...item, decrypted: { error: 'Gagal mendekripsi' } };
-          }
-        }));
-        setItems(decryptedItems);
-      }
+        if (res.data.success && masterPassword) {
+          // Decrypt all items
+          const decryptedItems = await Promise.all(res.data.data.map(async (item: any) => {
+            try {
+              const decStr = await decryptData(item.encryptedData, masterPassword);
+              const decData = JSON.parse(decStr);
+              return { ...item, decrypted: decData };
+            } catch (err) {
+              return { ...item, decrypted: null };
+            }
+          }));
+          setItems(decryptedItems.filter(item => item.type !== 'app_project'));
+        }
     } catch (error) {
       console.error(error);
     } finally {

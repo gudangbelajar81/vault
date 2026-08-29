@@ -1,9 +1,10 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, LockKeyhole, Code2, RefreshCw, Compass } from 'lucide-react';
+import { Shield, Key, CreditCard, GraduationCap, LockKeyhole, Code2, RefreshCw, Compass, Box } from 'lucide-react';
 
 const tabs = [
   { to: '/vault', icon: LockKeyhole, label: 'Kubah' },
+  { to: '/apps', icon: Box, label: 'App Manager' },
   { to: '/api-keys', icon: Code2, label: 'Kunci API' },
   { to: '/subscriptions', icon: RefreshCw, label: 'Sub' },
   { to: '/courses', icon: Compass, label: 'Kursus' },

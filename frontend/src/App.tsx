@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth } from './pages/Auth';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { Vault } from './pages/Vault';
+import { AppManager } from './pages/AppManager';
 import { Subscriptions } from './pages/Subscriptions';
 import { ApiKeys } from './pages/ApiKeys';
 import { Courses } from './pages/Courses';
@@ -60,6 +61,7 @@ function App() {
           {/* Grouped Access Routes */}
           <Route element={<AccessLayout />}>
             <Route path="/vault" element={<Vault />} />
+            <Route path="/apps" element={<AppManager />} />
             <Route path="/api-keys" element={<ApiKeys />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/courses" element={<Courses />} />
