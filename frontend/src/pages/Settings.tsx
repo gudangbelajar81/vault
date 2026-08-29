@@ -23,6 +23,9 @@ export const Settings = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [groqApiKey, setGroqApiKey] = useState('');
+  const [aiProvider, setAiProvider] = useState('groq');
+  const [aiBaseUrl, setAiBaseUrl] = useState('https://api.groq.com/openai/v1/chat/completions');
+  const [aiModel, setAiModel] = useState('llama-3.3-70b-versatile');
   const [omniRouterItemId, setOmniRouterItemId] = useState<string | null>(null);
   const [savingOmni, setSavingOmni] = useState(false);
 
@@ -532,5 +535,7 @@ export const Settings = () => {
     </div>
   );
 };
+
+
 
 
