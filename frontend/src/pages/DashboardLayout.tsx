@@ -6,6 +6,7 @@ import { CommandPalette } from '../components/CommandPalette';
 import { Search } from 'lucide-react';
 import { InstallPrompt } from '../components/InstallPrompt';
 import { UpdateManager, performHardRefresh } from '../components/UpdateManager';
+import { SubscriptionAlarm } from '../components/SubscriptionAlarm';
 
 const navItems = [
   { to: '/vault', icon: Vault, label: 'Akses Utama', activeColor: 'text-purple-400', glow: 'shadow-purple-500/20' },
@@ -50,6 +51,7 @@ export const DashboardLayout = () => {
     <div className="min-h-screen bg-bg-primary text-text-primary flex">
       <CommandPalette />
       <UpdateManager onUpdateStateChange={setHasUpdate} />
+      <SubscriptionAlarm />
       {/* Desktop Sidebar (Ultra Compact Icon-Only) */}
       <aside className="hidden md:flex relative z-40 w-20 bg-surface/50 border-r border-border backdrop-blur-xl flex-col items-center py-6">
         <div className="mb-8">
