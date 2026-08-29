@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../store/vaultStore';
 import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2, Eye, EyeOff, Cpu } from 'lucide-react';
 import axios from 'axios';
@@ -40,13 +40,18 @@ export const Settings = () => {
       const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
       const items = res.data.data || [];
       for (const item of items) {
+
         if (item.type === 'api' && item.title === 'Groq API Key (Omni Router)') {
           setOmniRouterItemId(item.id);
           const dataStr = await decryptData(item.encryptedData, masterPassword);
           const parsed = JSON.parse(dataStr);
-          setGroqApiKey(parsed.key || '');
+          setGroqApiKey(parsed.key || parsed.keys || '');
+          if (parsed.provider) setAiProvider(parsed.provider);
+          if (parsed.baseUrl) setAiBaseUrl(parsed.baseUrl);
+          if (parsed.model) setAiModel(parsed.model);
           break;
         }
+
       }
     } catch (e) {
       console.error(e);
@@ -56,11 +61,16 @@ export const Settings = () => {
   const handleSaveOmniRouter = async () => {
     if (!masterPassword) return;
     setSavingOmni(true);
+
     try {
       const dataToEncrypt = JSON.stringify({
-        key: groqApiKey,
-        notes: 'Konfigurasi otomatis untuk AI Omni Router Gateway.'
+        keys: groqApiKey,
+        provider: aiProvider,
+        baseUrl: aiBaseUrl,
+        model: aiModel,
+        notes: 'Konfigurasi lengkap Omni Router Gateway.'
       });
+
       const encryptedData = await encryptData(dataToEncrypt, masterPassword);
 
       if (omniRouterItemId) {
@@ -417,19 +427,96 @@ export const Settings = () => {
           </p>
 
           <div className="flex flex-col gap-4">
-            <div>
-              <label className="text-sm font-medium text-text-muted mb-1 block">Groq API Keys (Sistem Rotasi Cerdas)</label>
-              <textarea 
-                value={groqApiKey}
-                onChange={e => setGroqApiKey(e.target.value)}
-                placeholder="gsk_xxxxx1...&#10;gsk_xxxxx2...&#10;(Pisahkan tiap kunci dengan baris baru untuk fitur Auto-Failover)"
-                rows={4}
-                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all resize-y"
-              />
-              <p className="text-[10px] text-text-muted mt-1">
-                *Masukkan beberapa kunci sekaligus. Jika kunci pertama limit/habis, sistem akan otomatis merotasi ke kunci berikutnya.
-              </p>
-            </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-text-muted mb-1 block">AI Provider</label>
+                  <select 
+                    value={aiProvider}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setAiProvider(val);
+                      if (val === 'groq') {
+                        setAiBaseUrl('https://api.groq.com/openai/v1/chat/completions');
+                        setAiModel('llama-3.3-70b-versatile');
+                      } else if (val === 'openai') {
+                        setAiBaseUrl('https://api.openai.com/v1/chat/completions');
+                        setAiModel('gpt-4o-mini');
+                      } else if (val === 'gemini') {
+                        setAiBaseUrl('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+                        setAiModel('gemini-2.5-flash');
+                      } else if (val === 'custom') {
+                        setAiBaseUrl('');
+                        setAiModel('');
+                      }
+                    }}
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                  >
+                    <option value="groq">Groq (Fastest)</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="custom">Custom API</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-text-muted mb-1 block">Model Name</label>
+                  <input 
+                    type="text" 
+                    value={aiModel}
+                    onChange={e => setAiModel(e.target.value)}
+                    placeholder="llama-3.3-70b..."
+                    className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-text-muted mb-1 block">Base Endpoint URL</label>
+                <input 
+                  type="text" 
+                  value={aiBaseUrl}
+                  onChange={e => setAiBaseUrl(e.target.value)}
+                  placeholder="https://api.groq.com/..."
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-text-muted mb-1 flex items-center justify-between">
+                  <span>API Keys (Rotator Pool)</span>
+                  <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full">Auto-Failover ON</span>
+                </label>
+                <textarea 
+                  value={groqApiKey}
+                  onChange={e => setGroqApiKey(e.target.value)}
+                  placeholder="sk-xxxxx1...&#10;sk-xxxxx2...&#10;(Pisahkan dengan Enter)"
+                  rows={4}
+                  className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all resize-y font-mono text-xs"
+                />
+              </div>
+
+              {/* Status Visualizer */}
+              {groqApiKey && (
+                <div className="bg-black/10 dark:bg-white/5 rounded-lg p-3 border border-border/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-text-muted">Status Kunci (Live)</span>
+                  </div>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                    {groqApiKey.split(/[\r\n,]+/).map(k => k.trim()).filter(Boolean).map((key, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-[11px] bg-surface p-1.5 rounded border border-border">
+                        <span className="font-mono text-text-muted truncate w-3/4">
+                          {key.substring(0, 8)}...{key.substring(key.length - 4)}
+                        </span>
+                        <span className="flex items-center gap-1 font-bold text-green-500">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                          Alive
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
 
             <button 
               onClick={handleSaveOmniRouter}
@@ -535,6 +622,7 @@ export const Settings = () => {
     </div>
   );
 };
+
 
 
 
