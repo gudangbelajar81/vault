@@ -433,6 +433,7 @@ export const Settings = () => {
                   <label className="text-sm font-medium text-text-muted mb-1 block">AI Provider</label>
                   <select 
                     value={aiProvider}
+
                     onChange={e => {
                       const val = e.target.value;
                       setAiProvider(val);
@@ -445,18 +446,33 @@ export const Settings = () => {
                       } else if (val === 'gemini') {
                         setAiBaseUrl('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
                         setAiModel('gemini-2.5-flash');
+                      } else if (val === 'deepseek') {
+                        setAiBaseUrl('https://api.deepseek.com/chat/completions');
+                        setAiModel('deepseek-chat');
+                      } else if (val === 'openrouter') {
+                        setAiBaseUrl('https://openrouter.ai/api/v1/chat/completions');
+                        setAiModel('meta-llama/llama-3.1-8b-instruct:free');
+                      } else if (val === 'youtube') {
+                        setAiBaseUrl('https://youtube.com/api/v1/chat/completions');
+                        setAiModel('youtube-model');
                       } else if (val === 'custom') {
                         setAiBaseUrl('');
                         setAiModel('');
                       }
                     }}
+
                     className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
                   >
-                    <option value="groq">Groq (Fastest)</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="gemini">Gemini</option>
-                    <option value="custom">Custom API</option>
-                  </select>
+
+                  <option value="groq">Groq (Fastest)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Gemini</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="custom">Custom API</option>
+                </select>
+
                 </div>
                 <div>
                   <label className="text-sm font-medium text-text-muted mb-1 block">Model Name</label>
