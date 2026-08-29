@@ -22,7 +22,7 @@ export const Auth = () => {
   const location = useLocation();
   const { setMasterPassword } = useVaultStore();
 
-  const origin = location.state?.from?.pathname + (location.state?.from?.search || '') || '/vault';
+  const origin = location.state?.from ? `${location.state.from.pathname}${location.state.from.search || ''}` : '/vault';
 
   // Try to load saved email and master password on mount
   React.useEffect(() => {
