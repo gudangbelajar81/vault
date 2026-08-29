@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../store/vaultStore';
 import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2, Eye, EyeOff, Cpu } from 'lucide-react';
 import axios from 'axios';
@@ -532,4 +532,5 @@ export const Settings = () => {
     </div>
   );
 };
+
 
