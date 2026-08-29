@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useVaultStore } from '../store/vaultStore';
 import { Shield, Fingerprint, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import axios from 'axios';
@@ -19,7 +19,10 @@ export const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [bioLoading, setBioLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { setMasterPassword } = useVaultStore();
+
+  const origin = location.state?.from?.pathname + (location.state?.from?.search || '') || '/vault';
 
   // Try to load saved email and master password on mount
   React.useEffect(() => {
@@ -56,7 +59,7 @@ export const Auth = () => {
       // Save master password in memory
       setMasterPassword(masterPassword);
       toast.success(isRegister ? 'Account created successfully!' : 'Vault unlocked!');
-      navigate('/vault');
+      navigate(origin);
     } catch (error: any) {
       console.error(error);
       const errorMessage = error.response?.data?.data?.details || error.response?.data?.message || 'Authentication failed';
@@ -116,7 +119,7 @@ export const Auth = () => {
         }
 
         toast.success('Vault unlocked with Biometrics!');
-        navigate('/vault');
+        navigate(origin);
       }
     } catch (error: any) {
       console.error(error);

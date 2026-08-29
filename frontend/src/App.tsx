@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Auth } from './pages/Auth';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { Vault } from './pages/Vault';
@@ -14,6 +14,7 @@ import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
 import { KnowledgeBase } from './pages/KnowledgeBase';
+import { ShareReceiver } from './pages/ShareReceiver';
 import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
 
@@ -22,9 +23,10 @@ import { Toaster } from 'react-hot-toast';
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isUnlocked = useVaultStore((state) => state.isUnlocked);
+  const location = useLocation();
   
   if (!isUnlocked) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
   
   return <>{children}</>;
@@ -72,6 +74,7 @@ function App() {
           <Route path="/identity-map" element={<IdentityMap />} />
           <Route path="/licenses" element={<LicenseManager />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
+          <Route path="/share" element={<ShareReceiver />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
