@@ -38,7 +38,7 @@ export const ShareReceiver = () => {
       
       if (vaultRes.data.success && masterPassword) {
         for (const item of vaultRes.data.data) {
-          if (item.type === 'api' && item.title.toLowerCase().includes('groq')) {
+          if (item.type === 'api' && (item.title === 'Groq API Key (Omni Router)' || item.title.toLowerCase().includes('groq'))) {
             try {
               const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
               groqKey = dec.key || dec.password || dec.extra || '';
@@ -128,3 +128,4 @@ RINGKASAN: [1 kalimat singkat tentang isi atau tujuan konten ini]`;
     </div>
   );
 };
+

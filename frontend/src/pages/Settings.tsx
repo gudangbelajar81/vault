@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../store/vaultStore';
-import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Shield, Key, Download, RefreshCw, CheckCircle, AlertCircle, HardDrive, Fingerprint, Trash2, Eye, EyeOff, Cpu } from 'lucide-react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -20,11 +20,72 @@ export const Settings = () => {
   const [registering, setRegistering] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [groqApiKey, setGroqApiKey] = useState('');
+  const [omniRouterItemId, setOmniRouterItemId] = useState<string | null>(null);
+  const [savingOmni, setSavingOmni] = useState(false);
 
   useEffect(() => {
     fetchDevices();
-  }, []);
+    fetchOmniRouterConfig();
+  }, [masterPassword]);
+
+  const fetchOmniRouterConfig = async () => {
+    if (!masterPassword) return;
+    try {
+      const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
+      const items = res.data.data || [];
+      for (const item of items) {
+        if (item.type === 'api' && item.title === 'Groq API Key (Omni Router)') {
+          setOmniRouterItemId(item.id);
+          const dataStr = await decryptData(item.encryptedData, masterPassword);
+          const parsed = JSON.parse(dataStr);
+          setGroqApiKey(parsed.key || '');
+          break;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveOmniRouter = async () => {
+    if (!masterPassword) return;
+    setSavingOmni(true);
+    try {
+      const dataToEncrypt = JSON.stringify({
+        key: groqApiKey,
+        notes: 'Konfigurasi otomatis untuk AI Omni Router Gateway.'
+      });
+      const encryptedData = await encryptData(dataToEncrypt, masterPassword);
+
+      if (omniRouterItemId) {
+        await axios.put(`${API_URL}/api/vault/` + omniRouterItemId, {
+          type: 'api',
+          title: 'Groq API Key (Omni Router)',
+          encryptedData,
+          favorite: false
+        }, { withCredentials: true });
+      } else {
+        const res = await axios.post(`${API_URL}/api/vault`, {
+          type: 'api',
+          title: 'Groq API Key (Omni Router)',
+          encryptedData,
+          favorite: false
+        }, { withCredentials: true });
+        setOmniRouterItemId(res.data.data.id);
+      }
+      toast.success('Konfigurasi Omni Router Gateway tersimpan!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Gagal menyimpan Omni Router');
+    } finally {
+      setSavingOmni(false);
+    }
+  };
+
+  
 
   const fetchDevices = async () => {
     try {
@@ -336,6 +397,45 @@ export const Settings = () => {
           </form>
         </div>
 
+                {/* Omni Router Settings */}
+        <div className="bg-surface/30 border border-border rounded-xl p-6 backdrop-blur-sm h-fit">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-lg bg-secondary/20 text-secondary flex items-center justify-center">
+              <Cpu size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-text-primary">Omni Router Gateway</h3>
+              <p className="text-xs text-text-muted">Konfigurasi pusat AI engine untuk VaultPro</p>
+            </div>
+          </div>
+
+          <p className="text-sm text-text-muted mb-4">
+            Masukkan kunci API Groq Anda di sini. VaultPro akan menggunakan kunci ini sebagai otak utama untuk mengotomatisasi fitur cerdas (seperti Sosmed Catcher & Auto-Categorization).
+          </p>
+
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium text-text-muted mb-1 block">Groq API Key</label>
+              <input 
+                type="password" 
+                value={groqApiKey}
+                onChange={e => setGroqApiKey(e.target.value)}
+                placeholder="gsk_..."
+                className="w-full bg-black/5 dark:bg-black/40 border border-border rounded-lg px-4 py-2.5 text-text-primary focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
+              />
+            </div>
+
+            <button 
+              onClick={handleSaveOmniRouter}
+              disabled={savingOmni || !groqApiKey}
+              className="w-full bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+            >
+              {savingOmni ? <RefreshCw size={18} className="animate-spin" /> : <Shield size={18} />}
+              Simpan Konfigurasi Omni
+            </button>
+          </div>
+        </div>
+
         {/* Export Data */}
         <div className="flex flex-col gap-6">
           <div className="bg-surface/30 border border-border rounded-xl p-6 backdrop-blur-sm h-fit">
@@ -429,3 +529,4 @@ export const Settings = () => {
     </div>
   );
 };
+
