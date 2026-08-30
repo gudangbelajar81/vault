@@ -75,6 +75,7 @@ function App() {
           <Route path="/identity-map" element={<IdentityMap />} />
           <Route path="/licenses" element={<LicenseManager />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
+          <Route path="/workspace" element={<Workspace />} />
           <Route path="/share" element={<ShareReceiver />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
