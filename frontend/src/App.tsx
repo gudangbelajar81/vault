@@ -14,6 +14,7 @@ import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
 import { KnowledgeBase } from './pages/KnowledgeBase';
+import { Workspace } from './pages/Workspace';
 import { ShareReceiver } from './pages/ShareReceiver';
 import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
