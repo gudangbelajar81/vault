@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft } from 'lucide-react';
+import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
 import { CommandPalette } from '../components/CommandPalette';
 import { Search } from 'lucide-react';
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/expenses', icon: Banknote, label: 'Pengeluaran', activeColor: 'text-green-400', glow: 'shadow-green-500/20' },
   { to: '/licenses', icon: BadgeCheck, label: 'Licenses', activeColor: 'text-blue-400', glow: 'shadow-blue-500/20' },
     { to: '/knowledge', icon: Library, label: 'Pustaka', activeColor: 'text-rose-400', glow: 'shadow-rose-500/20' },
+    { to: '/intelligence', icon: Radar, label: 'Radar Tren', activeColor: 'text-teal-400', glow: 'shadow-teal-500/20' },
   { to: '/workspace', icon: LayoutPanelLeft, label: 'Meja Kerja', activeColor: 'text-indigo-400', glow: 'shadow-indigo-500/20' },
 ];
 

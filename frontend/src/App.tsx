@@ -15,6 +15,7 @@ import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
 import { KnowledgeBase } from './pages/KnowledgeBase';
 import { Workspace } from './pages/Workspace';
+import { IntelligenceHub } from './pages/IntelligenceHub';
 import { ShareReceiver } from './pages/ShareReceiver';
 import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -76,6 +77,7 @@ function App() {
           <Route path="/licenses" element={<LicenseManager />} />
           <Route path="/knowledge" element={<KnowledgeBase />} />
           <Route path="/workspace" element={<Workspace />} />
+            <Route path="/intelligence" element={<IntelligenceHub />} />
           <Route path="/share" element={<ShareReceiver />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
