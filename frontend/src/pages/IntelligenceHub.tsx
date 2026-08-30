@@ -22,15 +22,34 @@ export const IntelligenceHub: React.FC = () => {
         if (res.data.success) {
           for (const item of res.data.data) {
             if ((item.type === 'api' || item.type === 'api_key') && item.title.toLowerCase().includes('apify')) {
-              if (!masterPassword) return;
-              const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
-              // Support both structure formats (Settings vs ApiKeys page)
-              if (dec.keys && dec.keys.length > 0) {
-                 setApifyKey(dec.keys[0]);
-              } else if (dec.accounts && dec.accounts[0] && dec.accounts[0].apis && dec.accounts[0].apis[0]) {
-                 setApifyKey(dec.accounts[0].apis[0].key);
+              if (!masterPassword) continue;
+              try {
+                const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
+                let extractedKey = '';
+                
+                if (dec.keys && dec.keys.length > 0) {
+                  extractedKey = dec.keys[0];
+                } else if (dec.accounts) {
+                  for (const acc of dec.accounts) {
+                    if (acc.apis) {
+                      for (const api of acc.apis) {
+                        if (api.key && api.key.includes('apify_api_')) {
+                          extractedKey = api.key;
+                          break;
+                        }
+                        if (api.key && !extractedKey) extractedKey = api.key;
+                      }
+                    }
+                  }
+                }
+                
+                if (extractedKey) {
+                  setApifyKey(extractedKey);
+                  break;
+                }
+              } catch (e) {
+                console.error("Decrypt error", e);
               }
-              break;
             }
           }
         }
