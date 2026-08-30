@@ -21,10 +21,15 @@ export const IntelligenceHub: React.FC = () => {
         const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
         if (res.data.success) {
           for (const item of res.data.data) {
-            if (item.type === 'api' && item.title.toLowerCase().includes('apify')) {
+            if ((item.type === 'api' || item.type === 'api_key') && item.title.toLowerCase().includes('apify')) {
               if (!masterPassword) return;
               const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
-              setApifyKey(dec.keys[0]);
+              // Support both structure formats (Settings vs ApiKeys page)
+              if (dec.keys && dec.keys.length > 0) {
+                 setApifyKey(dec.keys[0]);
+              } else if (dec.accounts && dec.accounts[0] && dec.accounts[0].apis && dec.accounts[0].apis[0]) {
+                 setApifyKey(dec.accounts[0].apis[0].key);
+              }
               break;
             }
           }

@@ -65,13 +65,18 @@ export const SmartNotepad: React.FC = () => {
       
       if (res.data.success) {
         for (const item of res.data.data) {
-          if (item.type === 'api') {
+          if (item.type === 'api' || item.type === 'api_key') {
             try {
               if (!masterPassword) return { groqKey: '', openRouterKey: '', geminiKey: '' };
               const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
-              if (item.title === 'Groq API Key (Omni Router)') groqKey = dec.keys[0];
-              if (item.title === 'OpenRouter API Key') openRouterKey = dec.keys[0];
-              if (item.title === 'Gemini API Key') geminiKey = dec.keys[0];
+              
+              let extractedKey = '';
+              if (dec.keys && dec.keys.length > 0) extractedKey = dec.keys[0];
+              else if (dec.accounts && dec.accounts[0] && dec.accounts[0].apis && dec.accounts[0].apis[0]) extractedKey = dec.accounts[0].apis[0].key;
+              
+              if (item.title === 'Groq API Key (Omni Router)') groqKey = extractedKey;
+              if (item.title === 'OpenRouter API Key') openRouterKey = extractedKey;
+              if (item.title === 'Gemini API Key') geminiKey = extractedKey;
             } catch (e) {}
           }
         }
