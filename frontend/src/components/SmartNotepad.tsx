@@ -82,16 +82,19 @@ export const SmartNotepad: React.FC = () => {
       <div className="flex-1 relative bg-[#fdfdfc] dark:bg-[#1e1e1e] overflow-hidden">
         {/* CSS Magic for Lined Paper */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)',
-          backgroundSize: '100% 2rem',
-          opacity: 0.8
+          backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, rgba(156, 163, 175, 0.3) 31px, rgba(156, 163, 175, 0.3) 32px)',
+          backgroundAttachment: 'local'
         }}></div>
         <textarea
           value={text}
           onChange={handleChange}
           placeholder="Ketik catatan di sini..."
-          className="absolute inset-0 w-full h-full resize-none bg-transparent outline-none p-4 text-gray-800 dark:text-gray-200 text-sm leading-[2rem]"
-          style={{ lineHeight: '2rem' }}
+          className="absolute inset-0 w-full h-full resize-none bg-transparent outline-none text-gray-800 dark:text-gray-200 text-base"
+          style={{ 
+            lineHeight: '32px',
+            padding: '2px 16px', // 2px top padding so it sits right above the line
+            backgroundAttachment: 'local'
+          }}
           spellCheck={false}
         />
       </div>
