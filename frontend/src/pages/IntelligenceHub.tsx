@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Radar, Search, Activity, Video, MapPin, Camera, PlaySquare, Eye, Heart, MessageCircle, Share2, Copy, BookmarkPlus, Loader2, AlertCircle } from 'lucide-react';
+import { Radar, Search, Activity, Video, MapPin, Camera, PlaySquare, Users, Megaphone, Eye, Heart, MessageCircle, Share2, Copy, BookmarkPlus, Loader2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useVaultStore } from '../store/vaultStore';
@@ -8,7 +8,7 @@ import { API_URL } from '../config';
 
 export const IntelligenceHub: React.FC = () => {
   const { masterPassword } = useVaultStore();
-  const [activeTab, setActiveTab] = useState<'tiktok' | 'instagram' | 'maps' | 'youtube'>('tiktok');
+  const [activeTab, setActiveTab] = useState<'tiktok' | 'instagram' | 'maps' | 'youtube' | 'facebook' | 'fbads'>('tiktok');
   const [keyword, setKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any[]>([]);
@@ -167,6 +167,8 @@ export const IntelligenceHub: React.FC = () => {
         <TabButton active={activeTab === 'instagram'} onClick={() => setActiveTab('instagram')} icon={<Camera size={16} />} label="Instagram" activeColor="text-rose-500" activeBorder="border-rose-500" />
         <TabButton active={activeTab === 'youtube'} onClick={() => setActiveTab('youtube')} icon={<Video size={16} />} label="YouTube" activeColor="text-red-500" activeBorder="border-red-500" />
         <TabButton active={activeTab === 'maps'} onClick={() => setActiveTab('maps')} icon={<MapPin size={16} />} label="G-Maps" activeColor="text-blue-500" activeBorder="border-blue-500" />
+      <TabButton active={activeTab === 'facebook'} onClick={() => setActiveTab('facebook')} icon={<Users size={16} />} label="Facebook Pro" activeColor="text-blue-600" activeBorder="border-blue-600" />
+        <TabButton active={activeTab === 'fbads'} onClick={() => setActiveTab('fbads')} icon={<Megaphone size={16} />} label="FB Ads" activeColor="text-orange-500" activeBorder="border-orange-500" />
       </div>
 
       {/* Search Bar */}
