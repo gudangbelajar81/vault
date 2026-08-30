@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Save, Mic, Image as ImageIcon, CheckCircle2, Trash2, StopCircle, Loader2 } from 'lucide-react';
+import { Save, Mic, Image as ImageIcon, Camera, CheckCircle2, Trash2, StopCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useVaultStore } from '../store/vaultStore';
@@ -253,6 +253,8 @@ export const SmartNotepad: React.FC = () => {
           )}
           
           {/* Image Button */}
+          
+          {/* Gallery Input */}
           <input 
             type="file" 
             accept="image/*" 
@@ -260,14 +262,36 @@ export const SmartNotepad: React.FC = () => {
             className="hidden" 
             onChange={handleImageUpload} 
           />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessingImage}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50"
-          >
-            {isProcessingImage ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
-            <span className="hidden sm:inline">Foto Pintar</span>
-          </button>
+          {/* Camera Input */}
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment"
+            id="cameraInput"
+            className="hidden" 
+            onChange={handleImageUpload} 
+          />
+          
+          <div className="flex bg-indigo-500 rounded-lg overflow-hidden shadow-sm disabled:opacity-50">
+            <button 
+              onClick={() => document.getElementById('cameraInput')?.click()}
+              disabled={isProcessingImage}
+              className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-indigo-600 text-white text-xs font-bold transition-colors border-r border-indigo-400/30"
+              title="Kamera Langsung"
+            >
+              {isProcessingImage ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+              <span className="hidden sm:inline">Kamera</span>
+            </button>
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessingImage}
+              className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-indigo-600 text-white text-xs font-bold transition-colors"
+              title="Pilih dari Galeri"
+            >
+              <span className="hidden sm:inline">Galeri</span>
+            </button>
+          </div>
+
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-text-muted flex items-center gap-1 hidden md:flex">
