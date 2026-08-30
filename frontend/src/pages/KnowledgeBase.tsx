@@ -169,8 +169,8 @@ export const KnowledgeBase: React.FC = () => {
   };
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.decrypted.title.toLowerCase().includes(search.toLowerCase()) || 
-                          item.decrypted.content.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = (item.decrypted.title || '').toLowerCase().includes(search.toLowerCase()) || 
+                          (item.decrypted.content || '').toLowerCase().includes(search.toLowerCase());
     const matchesTab = activeTab === 'all' || item.decrypted.category === activeTab;
     return matchesSearch && matchesTab;
   });
