@@ -150,6 +150,11 @@ export const Courses = () => {
       comms = [{ id: Date.now().toString() + 'c1', url: '' }];
     }
 
+    let eLinks = dec.extraLinks || [];
+    if (eLinks.length === 0) {
+      eLinks = [{ id: Date.now().toString() + 'e1', name: '', url: '' }];
+    }
+
     setFormData({
       id: item.id,
       category: dec.category || '',
