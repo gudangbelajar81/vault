@@ -42,17 +42,30 @@ export const KnowledgeBase: React.FC = () => {
   const [formCoverUrl, setFormCoverUrl] = useState('');
   const [formContent, setFormContent] = useState('');
 
+  const PUSTAKA_KEY = 'pustaka_public_vault_key';
+
   const fetchItems = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
-      if (res.data.success && masterPassword) {
+      if (res.data.success) {
         const decItems = await Promise.all(res.data.data
           .filter((item: any) => item.type === 'knowledge')
           .map(async (item: any) => {
             try {
-              const decStr = await decryptData(item.encryptedData, masterPassword);
-              return { ...item, decrypted: JSON.parse(decStr) };
+              if (typeof item.encryptedData === 'string' && item.encryptedData.startsWith('{')) {
+                return { ...item, decrypted: JSON.parse(item.encryptedData) };
+              }
+              try {
+                const decStr = await decryptData(item.encryptedData, PUSTAKA_KEY);
+                return { ...item, decrypted: JSON.parse(decStr) };
+              } catch (e) {
+                if (masterPassword) {
+                  const decStr = await decryptData(item.encryptedData, masterPassword);
+                  return { ...item, decrypted: JSON.parse(decStr) };
+                }
+                return { ...item, decrypted: null };
+              }
             } catch (e) {
               return { ...item, decrypted: null };
             }
@@ -69,12 +82,10 @@ export const KnowledgeBase: React.FC = () => {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [masterPassword]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!masterPassword) return;
-
     try {
       const dataToEncrypt = JSON.stringify({
         category: formCategory,
@@ -84,7 +95,7 @@ export const KnowledgeBase: React.FC = () => {
         content: formContent
       });
 
-      const encryptedData = await encryptData(dataToEncrypt, masterPassword);
+      const encryptedData = await encryptData(dataToEncrypt, PUSTAKA_KEY);
 
       if (editingId) {
         await axios.put(`${API_URL}/api/vault/${editingId}`, {

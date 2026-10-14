@@ -1,6 +1,7 @@
+﻿import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar } from 'lucide-react';
+import { BookOpen, Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
 import { CommandPalette } from '../components/CommandPalette';
 import { Search } from 'lucide-react';
@@ -9,14 +10,14 @@ import { UpdateManager, performHardRefresh } from '../components/UpdateManager';
 import { SubscriptionAlarm } from '../components/SubscriptionAlarm';
 
 const navItems = [
+  { to: '/workspace', icon: LayoutPanelLeft, label: 'Meja Kerja', activeColor: 'text-indigo-400', glow: 'shadow-indigo-500/20' },
+  { to: '/ruang-kerja', icon: BookOpen, label: 'Ruang Kerja', activeColor: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
   { to: '/vault', icon: Vault, label: 'Akses Utama', activeColor: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  { to: '/knowledge', icon: Library, label: 'Pustaka', activeColor: 'text-rose-400', glow: 'shadow-rose-500/20' },
+  { to: '/intelligence', icon: Radar, label: 'Radar Tren', activeColor: 'text-teal-400', glow: 'shadow-teal-500/20' },
   { to: '/shortcuts', icon: Zap, label: 'Shortcuts', activeColor: 'text-yellow-400', glow: 'shadow-yellow-500/20' },
   { to: '/identity-map', icon: Fingerprint, label: 'Identity', activeColor: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
-  { to: '/expenses', icon: Banknote, label: 'Pengeluaran', activeColor: 'text-green-400', glow: 'shadow-green-500/20' },
   { to: '/licenses', icon: BadgeCheck, label: 'Licenses', activeColor: 'text-blue-400', glow: 'shadow-blue-500/20' },
-    { to: '/knowledge', icon: Library, label: 'Pustaka', activeColor: 'text-rose-400', glow: 'shadow-rose-500/20' },
-    { to: '/intelligence', icon: Radar, label: 'Radar Tren', activeColor: 'text-teal-400', glow: 'shadow-teal-500/20' },
-  { to: '/workspace', icon: LayoutPanelLeft, label: 'Meja Kerja', activeColor: 'text-indigo-400', glow: 'shadow-indigo-500/20' },
 ];
 
 export const DashboardLayout = () => {
@@ -44,7 +45,7 @@ export const DashboardLayout = () => {
   const { setMasterPassword, setCommandOpen } = useVaultStore();
   const handleLogout = () => {
     setMasterPassword(null);
-    navigate('/');
+    toast.success('Brankas Akses Utama Terkunci');
   };
 
   const allMobileNavItems = [...navItems, { to: '/settings', icon: Settings, label: 'Settings' }];
@@ -64,7 +65,7 @@ export const DashboardLayout = () => {
         
         <nav className="flex-1 space-y-4">
           {navItems.map((item) => {
-            const isAksesGroup = item.to === '/vault' && ['/vault', '/api-keys', '/subscriptions', '/courses'].includes(location.pathname);
+            const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
             const isActive = location.pathname === item.to || isAksesGroup;
             
             return (
@@ -110,7 +111,7 @@ export const DashboardLayout = () => {
             )}
             {/* Tooltip Refresh */}
             <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-              {hasUpdate ? '⚠️ Update Baru! Klik Hard Refresh' : 'Refresh & Hapus Cache'}
+              {hasUpdate ? 'âš ï¸ Update Baru! Klik Hard Refresh' : 'Refresh & Hapus Cache'}
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
             </span>
           </button>
@@ -206,12 +207,12 @@ export const DashboardLayout = () => {
             <button 
               onClick={() => {
                 if (navigator.vibrate) navigator.vibrate(30);
-                alert("🪄 Syncing VaultPro data to Local HWID Vault (F:\\APLIKASI KU\\.env)... Success!");
+                alert("ðŸª„ Syncing VaultPro data to Local HWID Vault (F:\\APLIKASI KU\\.env)... Success!");
               }}
               className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-xs font-semibold text-emerald-400 hover:scale-105 transition-transform active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer"
               title="One-Click Magic Sync ke PC Lokal"
             >
-              <span>🪄</span> Magic Sync
+              <span>ðŸª„</span> Magic Sync
             </button>
             <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-medium text-text-muted hover:text-text-primary transition-colors">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -233,7 +234,7 @@ export const DashboardLayout = () => {
           <div className="flex items-center gap-1 h-14 px-2">
             <div className="flex items-center min-w-max py-2">
             {allMobileNavItems.map((item) => {
-              const isAksesGroup = item.to === '/vault' && ['/vault', '/api-keys', '/subscriptions', '/courses'].includes(location.pathname);
+              const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
               const isActive = location.pathname === item.to || isAksesGroup;
               
               return (
@@ -278,3 +279,4 @@ export const DashboardLayout = () => {
     </div>
   );
 };
+

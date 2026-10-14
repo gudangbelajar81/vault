@@ -72,9 +72,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return sendResponse(res, 401, false, 'Email atau password salah');
     }
 
-    // Generate JWT Token
+    // Generate JWT Token (Long-lived for personal ease)
     const payload = { id: user.id };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '365d' });
 
     // Save session to database
     await prisma.session.create({
@@ -83,7 +83,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         tokenHash: crypto.createHash('sha256').update(token).digest('hex'),
         deviceInfo: req.headers['user-agent'] || 'Unknown',
         ipAddress: req.ip || 'Unknown',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
       }
     });
 
@@ -92,7 +92,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
     });
 
     sendResponse(res, 200, true, 'Login berhasil', { 

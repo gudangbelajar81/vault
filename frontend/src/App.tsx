@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth } from './pages/Auth';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { Vault } from './pages/Vault';
@@ -15,24 +15,11 @@ import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
 import { KnowledgeBase } from './pages/KnowledgeBase';
 import { Workspace } from './pages/Workspace';
+import { RuangKerja } from './pages/RuangKerja';
 import { IntelligenceHub } from './pages/IntelligenceHub';
 import { ShareReceiver } from './pages/ShareReceiver';
-import { useVaultStore } from './store/vaultStore';
 import { InstallPrompt } from './components/InstallPrompt';
-
 import { Toaster } from 'react-hot-toast';
-
-// Protected Route Wrapper
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isUnlocked = useVaultStore((state) => state.isUnlocked);
-  const location = useLocation();
-  
-  if (!isUnlocked) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-  
-  return <>{children}</>;
-};
 
 function App() {
   return (
@@ -52,37 +39,37 @@ function App() {
       />
       <BrowserRouter>
         <Routes>
-        <Route path="/" element={<Auth />} />
-        
-        {/* Dashboard Routes (Protected) */}
-        <Route 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Grouped Access Routes */}
-          <Route element={<AccessLayout />}>
-            <Route path="/vault" element={<Vault />} />
-            <Route path="/apps" element={<AppManager />} />
-            <Route path="/api-keys" element={<ApiKeys />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/expenses" element={<Expenses />} />
-          </Route>
-          
-          <Route path="/shortcuts" element={<Shortcuts />} />
-          <Route path="/identity-map" element={<IdentityMap />} />
-          <Route path="/licenses" element={<LicenseManager />} />
-          <Route path="/knowledge" element={<KnowledgeBase />} />
-          <Route path="/workspace" element={<Workspace />} />
+          {/* Main Dashboard Layout (Unblocked & Fast Personal Access) */}
+          <Route element={<DashboardLayout />}>
+            {/* Landing default: Meja Kerja (Instant workspace without login barrier) */}
+            <Route path="/" element={<Navigate to="/workspace" replace />} />
+
+            {/* 1 Rumah Akses Utama (Dilindungi Tembok Pengaman 1x Login) */}
+            <Route element={<AccessLayout />}>
+              <Route path="/vault" element={<Vault />} />
+              <Route path="/apps" element={<AppManager />} />
+              <Route path="/api-keys" element={<ApiKeys />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/expenses" element={<Expenses />} />
+            </Route>
+            
+            {/* Menu Bebas Keluar Masuk (Tanpa Gembok) */}
+            <Route path="/workspace" element={<Workspace />} />
+            <Route path="/ruang-kerja" element={<RuangKerja />} />
+            <Route path="/knowledge" element={<KnowledgeBase />} />
             <Route path="/intelligence" element={<IntelligenceHub />} />
-          <Route path="/share" element={<ShareReceiver />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            <Route path="/shortcuts" element={<Shortcuts />} />
+            <Route path="/identity-map" element={<IdentityMap />} />
+            <Route path="/licenses" element={<LicenseManager />} />
+            <Route path="/share" element={<ShareReceiver />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+
+          {/* Standalone Auth fallback jika dibutuhkan */}
+          <Route path="/login" element={<Auth />} />
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }
