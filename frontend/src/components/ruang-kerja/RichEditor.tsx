@@ -30,6 +30,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const [linkText, setLinkText] = useState('');
   const [stats, setStats] = useState({ words: 0, chars: 0 });
   const isUpdatingRef = useRef(false);
+  const savedRangeRef = useRef<Range | null>(null);
 
   // Sync content into contentEditable if changed externally
   useEffect(() => {
@@ -135,13 +136,44 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     e.target.value = '';
   };
 
+  // Save selection before opening link modal
+  const openLinkModal = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      if (editorRef.current.contains(sel.anchorNode)) {
+        savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+      }
+    }
+    setShowLinkModal(true);
+  };
+
   // Insert Link
   const confirmLink = () => {
     if (!linkUrl.trim()) return;
     const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
     const text = linkText.trim() || url;
     const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #00f0ff; text-decoration: underline;">${text}</a> `;
+
+    // Restore caret/selection lost when modal opened
+    if (editorRef.current) {
+      editorRef.current.focus();
+      if (savedRangeRef.current) {
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(savedRangeRef.current);
+      } else {
+        // Fallback: caret at end
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    }
+
     document.execCommand('insertHTML', false, linkHtml);
+    savedRangeRef.current = null;
     setShowLinkModal(false);
     setLinkUrl('');
     setLinkText('');
@@ -318,7 +350,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         <div className="w-[1px] h-4 bg-border mx-1" />
 
         {/* Insert Elements */}
-        <button type="button" onClick={() => setShowLinkModal(true)} className={buttonClass} title="Sisipkan Link">
+        <button type="button" onClick={openLinkModal} className={buttonClass} title="Sisipkan Link">
           <LinkIcon size={15} />
         </button>
         <button type="button" onClick={() => fileInputRef.current?.click()} className={buttonClass} title="Upload Foto/Gambar (Bisa juga langsung Paste Gambar!)">
