@@ -76,8 +76,21 @@ export const RichEditor: React.FC<RichEditorProps> = ({
 
   // Insert Checklist item
   const insertChecklist = () => {
-    const checkboxHtml = '<div class="rk-task-item" style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;"><input type="checkbox" style="margin-top: 4px; cursor: pointer;" /> <span>Tugas baru</span></div><br/>';
+    const checkboxHtml = '<div class="rk-task-item" data-checked="false"><span class="rk-checkbox" data-checked="false" contenteditable="false"></span><span class="rk-task-text">Tugas baru</span></div><p><br/></p>';
     document.execCommand('insertHTML', false, checkboxHtml);
+    handleInput();
+  };
+
+  // Toggle checklist item on click (persistent via data-checked attr)
+  const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const checkbox = target.closest('.rk-checkbox');
+    if (!checkbox || !editorRef.current) return;
+    const taskItem = checkbox.closest('.rk-task-item') as HTMLElement | null;
+    if (!taskItem) return;
+    const nextChecked = checkbox.getAttribute('data-checked') !== 'true';
+    checkbox.setAttribute('data-checked', String(nextChecked));
+    taskItem.setAttribute('data-checked', String(nextChecked));
     handleInput();
   };
 
@@ -385,6 +398,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         contentEditable
         onInput={handleInput}
         onPaste={handlePaste}
+        onClick={handleEditorClick}
         data-placeholder={placeholder}
         style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight }}
         className="flex-1 p-5 outline-none overflow-y-auto text-sm leading-relaxed text-text-primary focus:outline-none rk-editor-body"

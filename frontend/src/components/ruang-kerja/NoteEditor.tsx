@@ -32,7 +32,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const [unlockedPages, setUnlockedPages] = useState<Record<number, boolean>>({});
   const [unlockPasswordInput, setUnlockPasswordInput] = useState('');
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pageContentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pageTitleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const secondPageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadPages = async (targetActiveId?: number) => {
     try {
@@ -56,6 +59,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
 
   useEffect(() => {
     loadPages();
+    return () => {
+      if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+      if (pageContentTimerRef.current) clearTimeout(pageContentTimerRef.current);
+      if (pageTitleTimerRef.current) clearTimeout(pageTitleTimerRef.current);
+      if (secondPageTimerRef.current) clearTimeout(secondPageTimerRef.current);
+    };
   }, [note.id]);
 
   const activePage = pages.find(p => p.id === activePageId);
@@ -65,8 +74,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
     setSaved(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
+    if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+    titleTimerRef.current = setTimeout(async () => {
       await wsStorage.saveNote({ ...note, title: newTitle });
       setSaved(true);
     }, 800);
@@ -103,8 +112,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     const pid = activePage.id;
     setPages(prev => prev.map(p => p.id === pid ? { ...p, content } : p));
     setSaved(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
+    if (pageContentTimerRef.current) clearTimeout(pageContentTimerRef.current);
+    pageContentTimerRef.current = setTimeout(async () => {
       await wsStorage.updatePage(pid, { content });
       setSaved(true);
     }, 1000);
@@ -116,8 +125,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     const pid = activePage.id;
     setPages(prev => prev.map(p => p.id === pid ? { ...p, page_title: newPageTitle } : p));
     setSaved(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
+    if (pageTitleTimerRef.current) clearTimeout(pageTitleTimerRef.current);
+    pageTitleTimerRef.current = setTimeout(async () => {
       await wsStorage.updatePage(pid, { page_title: newPageTitle });
       setSaved(true);
     }, 800);
@@ -129,8 +138,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     const pid = secondPage.id;
     setPages(prev => prev.map(p => p.id === pid ? { ...p, content } : p));
     setSaved(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
+    if (secondPageTimerRef.current) clearTimeout(secondPageTimerRef.current);
+    secondPageTimerRef.current = setTimeout(async () => {
       await wsStorage.updatePage(pid, { content });
       setSaved(true);
     }, 1000);
