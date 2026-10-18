@@ -10,6 +10,29 @@ import toast from 'react-hot-toast';
 
 const COVER_COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#fb923c', '#4ade80', '#facc15', '#60a5fa', '#f87171'];
 
+/** Highlight semua kemunculan `keyword` di dalam `text` dengan warna neon kuning. */
+const highlightText = (text: string, keyword: string): React.ReactNode => {
+  if (!keyword.trim()) return text;
+  const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark
+            key={i}
+            className="bg-amber-400/30 text-amber-200 rounded px-0.5 font-semibold not-italic"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+};
+
 export const NotesPanel: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -259,23 +282,30 @@ export const NotesPanel: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {globalResults.map(r => (
-                <div
-                  key={r.id}
-                  onClick={() => openFromSearchResult(r.note_id)}
-                  className="p-3 bg-black/20 hover:bg-black/40 border border-border rounded-xl cursor-pointer transition-all space-y-1"
-                >
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <BookOpen size={13} className="text-cyan-400" />
-                    <span className="font-bold text-cyan-400 truncate">{r.note_title}</span>
-                    <ChevronRight size={11} className="text-text-muted" />
-                    <span className="text-text-primary truncate">{r.page_title}</span>
+              {globalResults.map(r => {
+                const plainText = r.content.replace(/<[^>]*>/g, '').slice(0, 200);
+                return (
+                  <div
+                    key={r.id}
+                    onClick={() => openFromSearchResult(r.note_id)}
+                    className="p-3 bg-black/20 hover:bg-black/40 border border-border hover:border-amber-500/30 rounded-xl cursor-pointer transition-all space-y-1"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                      <BookOpen size={13} className="text-cyan-400 shrink-0" />
+                      <span className="font-bold text-cyan-400 truncate">
+                        {highlightText(r.note_title, query)}
+                      </span>
+                      <ChevronRight size={11} className="text-text-muted shrink-0" />
+                      <span className="text-text-primary truncate">
+                        {highlightText(r.page_title, query)}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-text-muted line-clamp-3 leading-relaxed">
+                      {highlightText(plainText, query)}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-text-muted line-clamp-2">
-                    {r.content.replace(/<[^>]*>/g, '').slice(0, 140)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

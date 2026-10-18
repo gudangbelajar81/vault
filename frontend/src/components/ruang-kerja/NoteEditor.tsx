@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ArrowLeft, Plus, Trash2, Pin, PinOff, Tag, Clock, Download,
   Columns2, SplitSquareHorizontal, Lock, Unlock, History, X,
-  Search, BookOpen, ChevronRight, FileText, Printer, Check
+  Search, BookOpen, ChevronRight, FileText, Printer, Check, Loader2, FileStack
 } from 'lucide-react';
 import { wsStorage, type Note, type NotePage, type PageHistoryItem } from '../../services/workspaceStorage';
 import { RichEditor } from './RichEditor';
 import toast from 'react-hot-toast';
+// @ts-ignore - html2pdf.js tidak menyediakan type declaration resmi
+import html2pdf from 'html2pdf.js';
 
 // Hash page-lock password with SHA-256 + random salt (never store plaintext)
 const bufferToHex = (buf: ArrayBuffer): string => {
@@ -44,6 +46,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const [history, setHistory] = useState<PageHistoryItem[]>([]);
   const [splitMode, setSplitMode] = useState(false);
   const [secondPageId, setSecondPageId] = useState<number | null>(null);
+  const [isExportingBundle, setIsExportingBundle] = useState(false);
 
   // Password lock state
   const [showLockModal, setShowLockModal] = useState(false);
@@ -298,7 +301,104 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     a.click();
   };
 
-  // Export PDF / Print
+  // Export seluruh buku (semua halaman) menjadi 1 file PDF dengan cover + daftar isi
+  const exportBookToPdf = async () => {
+    if (pages.length === 0) {
+      toast.error('Buku ini belum punya halaman untuk diekspor.');
+      return;
+    }
+    setIsExportingBundle(true);
+    try {
+      const coverColor = note.cover_color || '#00f0ff';
+      const sortedPages = [...pages].sort((a, b) => a.sort_order - b.sort_order);
+
+      const tocItems = sortedPages
+        .map((p, i) => `<li><span class="toc-num">${i + 1}.</span> ${p.page_title || 'Tanpa Judul'}</li>`)
+        .join('');
+
+      const pageSections = sortedPages
+        .map((p, i) => {
+          const isLocked = p.locked && !unlockedPages[p.id];
+          const bodyContent = isLocked
+            ? `<p class="locked-notice">🔒 Halaman ini terkunci dengan kata sandi dan tidak disertakan dalam ekspor PDF demi keamanan.</p>`
+            : (p.content || '<p><em>(Halaman kosong)</em></p>');
+          return `
+            <section class="page-section" style="${i > 0 ? 'page-break-before: always;' : ''}">
+              <h2>${i + 1}. ${p.page_title || 'Tanpa Judul'}</h2>
+              <div class="page-body">${bodyContent}</div>
+            </section>
+          `;
+        })
+        .join('');
+
+      const bundleHtml = `
+        <div style="font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1e293b; line-height: 1.7;">
+          <style>
+            .cover-page { page-break-after: always; min-height: 900px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, ${coverColor}22, #ffffff); border-radius: 16px; padding: 40px; }
+            .cover-page h1 { font-size: 32px; font-weight: 900; color: #0f172a; margin-bottom: 12px; }
+            .cover-page .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; background: ${coverColor}; color: #000; font-weight: 700; font-size: 12px; margin-bottom: 20px; }
+            .cover-page .meta { color: #64748b; font-size: 13px; margin-top: 24px; }
+            .toc-page { page-break-after: always; padding: 20px; }
+            .toc-page h2 { border-bottom: 3px solid ${coverColor}; padding-bottom: 10px; color: #0f172a; }
+            .toc-page ul { list-style: none; padding: 0; margin-top: 16px; }
+            .toc-page li { padding: 10px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+            .toc-num { font-weight: 700; color: ${coverColor}; margin-right: 8px; }
+            .page-section { padding: 10px 4px; }
+            .page-section h2 { border-bottom: 2px solid ${coverColor}; padding-bottom: 8px; color: #0f172a; font-size: 20px; }
+            .page-body img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
+            .page-body table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+            .page-body table td, .page-body table th { border: 1px solid #cbd5e1; padding: 8px; font-size: 13px; }
+            .page-body blockquote { border-left: 4px solid ${coverColor}; padding-left: 12px; color: #64748b; }
+            .page-body pre { background: #f1f5f9; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; }
+            .locked-notice { color: #f59e0b; font-weight: 600; font-style: italic; }
+          </style>
+
+          <div class="cover-page">
+            <span class="badge">BUKU CATATAN</span>
+            <h1>${note.title || 'Tanpa Judul'}</h1>
+            <p style="color:#64748b; font-size:14px;">${sortedPages.length} Halaman</p>
+            <p class="meta">Diekspor dari Ruang Kerja VaultPro — ${new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}</p>
+          </div>
+
+          <div class="toc-page">
+            <h2>📑 Daftar Isi</h2>
+            <ul>${tocItems}</ul>
+          </div>
+
+          ${pageSections}
+        </div>
+      `;
+
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = '800px';
+      container.innerHTML = bundleHtml;
+      document.body.appendChild(container);
+
+      await html2pdf()
+        .set({
+          margin: 14,
+          filename: `${(note.title || 'buku-catatan').replace(/[^a-z0-9]/gi, '_')}.pdf`,
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(container)
+        .save();
+
+      document.body.removeChild(container);
+      toast.success(`PDF buku "${note.title}" berhasil diunduh (${sortedPages.length} halaman)!`);
+    } catch (err) {
+      console.error('Gagal ekspor PDF bundle:', err);
+      toast.error('Gagal membuat PDF bundle. Coba lagi.');
+    } finally {
+      setIsExportingBundle(false);
+    }
+  };
+
+  // Export PDF / Print (1 halaman aktif saja — via dialog print browser)
   const exportPdf = () => {
     if (!activePage) return;
     const printWindow = window.open('', '_blank');
@@ -404,6 +504,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             title="Cetak atau simpan sebagai PDF"
           >
             <Printer size={14} /> <span className="hidden sm:inline">PDF</span>
+          </button>
+
+          <button
+            onClick={exportBookToPdf}
+            disabled={isExportingBundle}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Ekspor seluruh buku (semua halaman) jadi 1 file PDF dengan cover & daftar isi"
+          >
+            {isExportingBundle ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <FileStack size={14} />
+            )}
+            <span className="hidden sm:inline">{isExportingBundle ? 'Memproses...' : 'PDF Buku'}</span>
           </button>
         </div>
       </div>

@@ -4,10 +4,12 @@ import {
   Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare,
   Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
   Quote, Code, Minus, Undo2, Redo2, Maximize2, Minimize2,
-  Highlighter, Palette, X, Sparkles, Loader2, ChevronDown
+  Highlighter, Palette, X, Sparkles, Loader2, ChevronDown, FileCode2
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { marked } from 'marked';
+import TurndownService from 'turndown';
 import { useVaultStore } from '../../store/vaultStore';
 import { decryptData } from '../../utils/crypto';
 import { API_URL } from '../../config';
@@ -40,6 +42,14 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const [showAiMenu, setShowAiMenu] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { masterPassword } = useVaultStore();
+
+  // ================= MARKDOWN MODE =================
+  const [isMarkdownMode, setIsMarkdownMode] = useState(false);
+  const [markdownText, setMarkdownText] = useState('');
+  const turndownRef = useRef<TurndownService | null>(null);
+  if (!turndownRef.current) {
+    turndownRef.current = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+  }
 
   // Sync content into contentEditable if changed externally
   useEffect(() => {
@@ -542,6 +552,32 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     }
   };
 
+  // ================= MARKDOWN MODE TOGGLE =================
+  // Masuk mode Markdown: konversi HTML editor saat ini -> teks Markdown mentah.
+  // Keluar mode Markdown: konversi teks Markdown -> HTML, lalu suntik balik ke editor.
+  const toggleMarkdownMode = () => {
+    if (!isMarkdownMode) {
+      const html = editorRef.current?.innerHTML || content || '';
+      const md = turndownRef.current!.turndown(html);
+      setMarkdownText(md);
+      setIsMarkdownMode(true);
+    } else {
+      const html = String(marked.parse(markdownText, { async: false }));
+      if (editorRef.current) {
+        editorRef.current.innerHTML = html;
+      }
+      isUpdatingRef.current = true;
+      onChange(html);
+      updateStats();
+      setTimeout(() => { isUpdatingRef.current = false; }, 50);
+      setIsMarkdownMode(false);
+    }
+  };
+
+  const handleMarkdownChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMarkdownText(e.target.value);
+  };
+
   const buttonClass = "p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 active:bg-white/15 transition-all text-xs flex items-center justify-center";
 
   // Prevent toolbar button click from stealing focus & clearing selection
@@ -882,6 +918,19 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           </span>
           <button
             type="button"
+            onClick={toggleMarkdownMode}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              isMarkdownMode
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                : 'text-text-muted hover:text-text-primary hover:bg-white/10'
+            }`}
+            title={isMarkdownMode ? 'Kembali ke Mode Tulis (WYSIWYG)' : 'Mode Markdown Mentah'}
+          >
+            <FileCode2 size={14} />
+            <span className="hidden sm:inline">{isMarkdownMode ? 'Markdown' : 'MD'}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
             className={buttonClass}
             title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
@@ -942,7 +991,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         </div>
       )}
 
-      {/* Editable Canvas */}
+      {/* Editable Canvas (WYSIWYG) — tetap mounted saat mode Markdown aktif agar innerHTML bisa dibaca saat toggle kembali */}
       <div
         ref={editorRef}
         contentEditable
@@ -951,9 +1000,21 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         onClick={handleEditorClick}
         onKeyDown={handleKeyDown}
         data-placeholder={placeholder}
-        style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight }}
+        style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight, display: isMarkdownMode ? 'none' : undefined }}
         className="flex-1 p-5 outline-none overflow-y-auto text-sm leading-relaxed text-text-primary focus:outline-none rk-editor-body"
       />
+
+      {/* Markdown Raw Mode */}
+      {isMarkdownMode && (
+        <textarea
+          value={markdownText}
+          onChange={handleMarkdownChange}
+          placeholder={'# Judul\n\nTulis dalam format Markdown mentah di sini...'}
+          style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight }}
+          className="flex-1 p-5 outline-none resize-none bg-black/10 text-sm leading-relaxed text-text-primary font-mono focus:outline-none"
+          spellCheck={false}
+        />
+      )}
     </div>
   );
 };
