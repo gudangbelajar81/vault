@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
   FileText, StickyNote, Paintbrush, Table2, Bookmark,
-  BookOpen, Download, Upload, ShieldCheck
+  BookOpen, Download, Upload, ShieldCheck, Timer
 } from 'lucide-react';
 import { NotesPanel } from '../components/ruang-kerja/NotesPanel';
 import { StickiesPanel } from '../components/ruang-kerja/StickiesPanel';
 import { DrawingPanel } from '../components/ruang-kerja/DrawingPanel';
 import { SheetsPanel } from '../components/ruang-kerja/SheetsPanel';
 import { BookmarksPanel } from '../components/ruang-kerja/BookmarksPanel';
+import { PomodoroPanel } from '../components/ruang-kerja/PomodoroPanel';
 import { wsStorage } from '../services/workspaceStorage';
 import toast from 'react-hot-toast';
 
-type TabType = 'notes' | 'stickies' | 'drawing' | 'sheets' | 'bookmarks' | 'backup';
+type TabType = 'notes' | 'stickies' | 'drawing' | 'sheets' | 'bookmarks' | 'pomodoro' | 'backup';
 
 export const RuangKerja: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('notes');
@@ -23,6 +24,7 @@ export const RuangKerja: React.FC = () => {
     { id: 'drawing', label: 'Gambar', icon: <Paintbrush size={16} />, color: 'text-emerald-400' },
     { id: 'sheets', label: 'Tabel', icon: <Table2 size={16} />, color: 'text-blue-400' },
     { id: 'bookmarks', label: 'Bookmark', icon: <Bookmark size={16} />, color: 'text-purple-400' },
+    { id: 'pomodoro', label: 'Fokus Pomodoro', icon: <Timer size={16} />, color: 'text-rose-400' },
     { id: 'backup', label: 'Ekspor & Cadangan', icon: <Download size={16} />, color: 'text-rose-400' },
   ];
 
@@ -107,6 +109,7 @@ export const RuangKerja: React.FC = () => {
         {activeTab === 'drawing' && <DrawingPanel />}
         {activeTab === 'sheets' && <SheetsPanel />}
         {activeTab === 'bookmarks' && <BookmarksPanel />}
+        {activeTab === 'pomodoro' && <PomodoroPanel />}
 
         {/* Backup Tab */}
         {activeTab === 'backup' && (

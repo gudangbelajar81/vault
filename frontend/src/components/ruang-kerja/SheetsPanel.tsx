@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Table2, Plus, Trash2, ArrowLeft, Download, Undo2 } from 'lucide-react';
+import { Table2, Plus, Trash2, ArrowLeft, Download, Undo2, Upload } from 'lucide-react';
 import { wsStorage, type SheetItem } from '../../services/workspaceStorage';
+import { resolveCellDisplay, isFormulaCell, parseCSV } from '../../utils/formulaEngine';
 import toast from 'react-hot-toast';
 
 export const SheetsPanel: React.FC = () => {
@@ -12,6 +13,8 @@ export const SheetsPanel: React.FC = () => {
   const [saved, setSaved] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoStackRef = useRef<string[][][]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [focusedCell, setFocusedCell] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -117,13 +120,38 @@ export const SheetsPanel: React.FC = () => {
   };
 
   const exportCSV = () => {
-    const csv = grid.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = grid
+      .map((r, ri) => r.map((c, ci) => `"${resolveCellDisplay(grid, ri, ci).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `${title || 'tabel'}.csv`;
     a.click();
     toast.success('File CSV berhasil diunduh');
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || '');
+        const parsed = parseCSV(text);
+        if (parsed.length === 0) {
+          toast.error('File CSV kosong atau tidak valid');
+          return;
+        }
+        pushUndoSnapshot();
+        applyGridChange(parsed);
+        toast.success(`CSV diimpor: ${parsed.length} baris, ${parsed[0]?.length || 0} kolom`);
+      } catch {
+        toast.error('Gagal membaca file CSV');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   if (active) {
@@ -183,6 +211,19 @@ export const SheetsPanel: React.FC = () => {
               + Kolom
             </button>
             <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 border border-border text-text-primary"
+            >
+              <Upload size={13} /> Import CSV
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleImportCSV}
+              className="hidden"
+            />
+            <button
               onClick={exportCSV}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-500 text-black hover:bg-cyan-400 shadow-md shadow-cyan-500/20"
             >
@@ -190,6 +231,10 @@ export const SheetsPanel: React.FC = () => {
             </button>
           </div>
         </div>
+
+        <p className="text-[10px] text-text-muted px-1 -mt-1">
+          Tip: ketik formula seperti <code className="text-cyan-400">=SUM(A1:A3)</code>, <code className="text-cyan-400">=AVG(B1:B5)</code>, atau <code className="text-cyan-400">=A1+B1</code> di dalam sel.
+        </p>
 
         {/* Table View */}
         <div className="flex-1 bg-surface border border-border rounded-2xl overflow-auto p-4">
@@ -228,16 +273,27 @@ export const SheetsPanel: React.FC = () => {
                       </button>
                     </div>
                   </td>
-                  {row.map((cell, ci) => (
-                    <td key={ci} className="border border-border/40 p-0">
-                      <input
-                        type="text"
-                        value={cell}
-                        onChange={e => cellChange(ri, ci, e.target.value)}
-                        className="w-full bg-transparent border-none outline-none p-2.5 text-xs font-mono text-text-primary focus:bg-cyan-500/10"
-                      />
-                    </td>
-                  ))}
+                  {row.map((cell, ci) => {
+                    const cellKey = `${ri},${ci}`;
+                    const isFormula = isFormulaCell(cell);
+                    const isFocused = focusedCell === cellKey;
+                    const displayValue = isFocused ? cell : (isFormula ? resolveCellDisplay(grid, ri, ci) : cell);
+                    return (
+                      <td key={ci} className="border border-border/40 p-0">
+                        <input
+                          type="text"
+                          value={displayValue}
+                          onFocus={() => setFocusedCell(cellKey)}
+                          onBlur={() => setFocusedCell(prev => (prev === cellKey ? null : prev))}
+                          onChange={e => cellChange(ri, ci, e.target.value)}
+                          title={isFormula ? cell : undefined}
+                          className={`w-full bg-transparent border-none outline-none p-2.5 text-xs font-mono focus:bg-cyan-500/10 ${
+                            isFormula ? 'text-amber-400 font-bold' : 'text-text-primary'
+                          }`}
+                        />
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

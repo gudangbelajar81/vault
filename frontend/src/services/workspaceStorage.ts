@@ -68,6 +68,13 @@ export interface SearchResultItem {
   note_title: string;
 }
 
+export interface DrawingBoard {
+  id: number;
+  name: string;
+  data: string | null; // PNG data URL, null jika kanvas masih kosong
+  updated_at: string;
+}
+
 // Inisialisasi localforage store
 const rkStore = localforage.createInstance({
   name: 'VaultPro_Workspace',
@@ -297,17 +304,71 @@ export const wsStorage = {
     await rkStore.setItem('stickies', stickies.filter(s => s.id !== id));
   },
 
-  // ── DRAWING CANVAS ──
-  async getCanvasDrawing(): Promise<string | null> {
-    return await rkStore.getItem<string>('canvas_drawing');
+  // ── DRAWING CANVAS (Multi-Board, Tier 2) ──
+  // Mendukung banyak kanvas bernama ("Papan 1", "Papan 2", dst). Key lama
+  // 'canvas_drawing' (single-kanvas) dimigrasikan otomatis sekali saja ke
+  // papan pertama agar data lama pengguna tidak hilang.
+  async getDrawingBoards(): Promise<DrawingBoard[]> {
+    const data = await rkStore.getItem<DrawingBoard[]>('drawing_boards');
+    if (data && data.length > 0) return data;
+
+    // Migrasi dari skema single-kanvas lama (jika ada)
+    const legacy = await rkStore.getItem<string>('canvas_drawing');
+    const boards: DrawingBoard[] = [
+      {
+        id: 1,
+        name: 'Papan 1',
+        data: legacy || null,
+        updated_at: new Date().toLocaleDateString('id-ID'),
+      },
+    ];
+    await rkStore.setItem('drawing_boards', boards);
+    if (legacy) await rkStore.removeItem('canvas_drawing');
+    return boards;
   },
 
-  async saveCanvasDrawing(dataUrl: string): Promise<void> {
-    await rkStore.setItem('canvas_drawing', dataUrl);
+  async addDrawingBoard(name: string): Promise<DrawingBoard> {
+    const boards = await this.getDrawingBoards();
+    const newBoard: DrawingBoard = {
+      id: Date.now(),
+      name: name || `Papan ${boards.length + 1}`,
+      data: null,
+      updated_at: new Date().toLocaleDateString('id-ID'),
+    };
+    boards.push(newBoard);
+    await rkStore.setItem('drawing_boards', boards);
+    return newBoard;
   },
 
-  async clearCanvasDrawing(): Promise<void> {
-    await rkStore.removeItem('canvas_drawing');
+  async renameDrawingBoard(id: number, name: string): Promise<void> {
+    const boards = await this.getDrawingBoards();
+    const idx = boards.findIndex(b => b.id === id);
+    if (idx === -1) return;
+    boards[idx] = { ...boards[idx], name };
+    await rkStore.setItem('drawing_boards', boards);
+  },
+
+  async saveDrawingBoardData(id: number, dataUrl: string): Promise<void> {
+    const boards = await this.getDrawingBoards();
+    const idx = boards.findIndex(b => b.id === id);
+    if (idx === -1) return;
+    boards[idx] = { ...boards[idx], data: dataUrl, updated_at: new Date().toLocaleDateString('id-ID') };
+    await rkStore.setItem('drawing_boards', boards);
+  },
+
+  async clearDrawingBoardData(id: number): Promise<void> {
+    const boards = await this.getDrawingBoards();
+    const idx = boards.findIndex(b => b.id === id);
+    if (idx === -1) return;
+    boards[idx] = { ...boards[idx], data: null };
+    await rkStore.setItem('drawing_boards', boards);
+  },
+
+  async deleteDrawingBoard(id: number): Promise<void> {
+    const boards = await this.getDrawingBoards();
+    const remaining = boards.filter(b => b.id !== id);
+    // Selalu sisakan minimal 1 papan agar panel tidak kosong total
+    await rkStore.setItem('drawing_boards', remaining.length > 0 ? remaining : boards);
   },
 
   // ── SHEETS ──
@@ -386,14 +447,14 @@ export const wsStorage = {
   // ── BACKUP & RESTORE ──
   async exportAllData(): Promise<string> {
     const data = {
-      version: '1.0',
+      version: '1.1',
       exported_at: new Date().toISOString(),
       notes: await this.getNotes(),
       pages: await this.getAllPages(),
       stickies: await this.getStickies(),
       sheets: await this.getSheets(),
       bookmarks: await this.getBookmarks(),
-      canvas_drawing: await this.getCanvasDrawing(),
+      drawing_boards: await this.getDrawingBoards(),
     };
     return JSON.stringify(data, null, 2);
   },
@@ -406,7 +467,14 @@ export const wsStorage = {
       if (data.stickies) await rkStore.setItem('stickies', data.stickies);
       if (data.sheets) await rkStore.setItem('sheets', data.sheets);
       if (data.bookmarks) await rkStore.setItem('bookmarks', data.bookmarks);
-      if (data.canvas_drawing) await rkStore.setItem('canvas_drawing', data.canvas_drawing);
+      if (data.drawing_boards) {
+        await rkStore.setItem('drawing_boards', data.drawing_boards);
+      } else if (data.canvas_drawing) {
+        // Backup lama (versi 1.0, single-kanvas) -> migrasikan jadi Papan 1
+        await rkStore.setItem('drawing_boards', [
+          { id: 1, name: 'Papan 1', data: data.canvas_drawing, updated_at: new Date().toLocaleDateString('id-ID') },
+        ]);
+      }
       return true;
     } catch {
       return false;

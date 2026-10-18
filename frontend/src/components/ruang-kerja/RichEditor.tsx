@@ -4,8 +4,13 @@ import {
   Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare,
   Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
   Quote, Code, Minus, Undo2, Redo2, Maximize2, Minimize2,
-  Highlighter, Palette, X
+  Highlighter, Palette, X, Sparkles, Loader2, ChevronDown
 } from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useVaultStore } from '../../store/vaultStore';
+import { decryptData } from '../../utils/crypto';
+import { API_URL } from '../../config';
 
 interface RichEditorProps {
   content: string;
@@ -32,6 +37,9 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const isUpdatingRef = useRef(false);
   const savedRangeRef = useRef<Range | null>(null);
   const selectedTextRef = useRef('');
+  const [showAiMenu, setShowAiMenu] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const { masterPassword } = useVaultStore();
 
   // Sync content into contentEditable if changed externally
   useEffect(() => {
@@ -381,6 +389,159 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const textColors = ['#ffffff', '#00f0ff', '#51cf66', '#ffea00', '#ff6b6b', '#cc5de8', '#ff922b', '#94a3b8'];
   const highlightColors = ['transparent', 'rgba(255,234,0,0.3)', 'rgba(0,240,255,0.25)', 'rgba(81,207,102,0.25)', 'rgba(255,107,107,0.25)', 'rgba(204,93,232,0.25)'];
 
+  // ================= AI WRITING ASSISTANT =================
+  // Ambil kunci API AI dari Kubah (Vault) terenkripsi. Pola sama dengan SmartNotepad.tsx.
+  // Karena Ruang Kerja didesain bebas-login (tanpa buka Kubah dulu), fitur AI ini
+  // butuh masterPassword tersedia di memori (vault sudah pernah dibuka sesi ini).
+  const getAiKeys = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
+      let groqKey = '';
+      let openRouterKey = '';
+
+      if (res.data.success) {
+        for (const item of res.data.data) {
+          if (item.type === 'api' || item.type === 'api_key') {
+            try {
+              if (!masterPassword) continue;
+              const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
+              let extractedKey = '';
+              if (dec.keys && dec.keys.length > 0) {
+                extractedKey = dec.keys[0];
+              } else if (dec.accounts) {
+                for (const acc of dec.accounts) {
+                  if (acc.apis) {
+                    for (const api of acc.apis) {
+                      if (api.key && api.key.length > 5) {
+                        extractedKey = api.key;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+              if (item.title === 'Groq API Key (Omni Router)') groqKey = extractedKey;
+              if (item.title === 'OpenRouter API Key') openRouterKey = extractedKey;
+            } catch {
+              // skip item gagal didekripsi
+            }
+          }
+        }
+      }
+      return { groqKey, openRouterKey };
+    } catch {
+      return { groqKey: '', openRouterKey: '' };
+    }
+  };
+
+  const callAi = async (systemPrompt: string, userText: string): Promise<string | null> => {
+    if (!masterPassword) {
+      toast.error('Buka Kubah (Vault) dulu untuk pakai Asisten AI — kunci API tersimpan di sana.');
+      return null;
+    }
+    const keys = await getAiKeys();
+    const apiKey = keys.groqKey || keys.openRouterKey;
+    if (!apiKey) {
+      toast.error('Kunci API Groq/OpenRouter belum dikonfigurasi di menu Kunci API.');
+      return null;
+    }
+    try {
+      const useGroq = !!keys.groqKey;
+      const url = useGroq
+        ? 'https://api.groq.com/openai/v1/chat/completions'
+        : 'https://openrouter.ai/api/v1/chat/completions';
+      const model = useGroq ? 'llama-3.3-70b-versatile' : 'google/gemini-1.5-flash';
+
+      const res = await axios.post(
+        url,
+        {
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userText },
+          ],
+          temperature: 0.7,
+        },
+        { headers: { Authorization: `Bearer ${apiKey}` } }
+      );
+      return res.data?.choices?.[0]?.message?.content?.trim() || null;
+    } catch (err) {
+      console.error('AI request gagal:', err);
+      toast.error('Gagal menghubungi AI. Cek kunci API atau koneksi internet.');
+      return null;
+    }
+  };
+
+  /** Ambil teks yang dipakai sebagai konteks: selection kalau ada, atau seluruh isi editor. */
+  const getContextText = (): { text: string; isSelection: boolean } => {
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && editorRef.current?.contains(sel.anchorNode)) {
+      return { text: sel.toString(), isSelection: true };
+    }
+    return { text: editorRef.current?.innerText || '', isSelection: false };
+  };
+
+  const insertAiResult = (resultText: string, isSelection: boolean) => {
+    if (editorRef.current) editorRef.current.focus();
+    const html = `<p>${resultText.split('\n').join('<br/>')}</p>`;
+    if (isSelection) {
+      document.execCommand('insertHTML', false, html);
+    } else {
+      document.execCommand('selectAll', false);
+      document.execCommand('insertHTML', false, html);
+    }
+    handleInput();
+  };
+
+  const runAiAction = async (action: 'continue' | 'summarize' | 'grammar') => {
+    const { text, isSelection } = getContextText();
+    if (!text.trim()) {
+      toast.error('Tidak ada teks untuk diproses. Tulis dulu sesuatu, Bro.');
+      return;
+    }
+    setShowAiMenu(false);
+    setIsAiLoading(true);
+    try {
+      let systemPrompt = '';
+      let userText = text;
+      let useSelectionForInsert = isSelection;
+
+      if (action === 'continue') {
+        systemPrompt = 'Kamu asisten penulisan Bahasa Indonesia. Lanjutkan tulisan berikut dengan gaya & konteks yang konsisten, 2-4 kalimat baru saja, jangan ulangi teks aslinya. Balas HANYA kalimat lanjutannya.';
+        // Untuk "lanjutkan", kita selalu sisipkan di akhir (bukan replace)
+        useSelectionForInsert = true;
+        if (editorRef.current) {
+          editorRef.current.focus();
+          document.execCommand('selectAll', false);
+          document.getSelection()?.collapseToEnd();
+        }
+      } else if (action === 'summarize') {
+        systemPrompt = 'Kamu asisten yang meringkas teks Bahasa Indonesia menjadi poin-poin singkat dan padat, maksimal 5 poin. Balas HANYA ringkasannya.';
+      } else {
+        systemPrompt = 'Kamu editor Bahasa Indonesia. Perbaiki tata bahasa, ejaan, dan kejelasan teks berikut TANPA mengubah makna aslinya. Balas HANYA versi perbaikannya, tanpa komentar tambahan.';
+      }
+
+      const result = await callAi(systemPrompt, userText);
+      if (!result) return;
+
+      if (action === 'continue') {
+        // Sisipkan di posisi caret (akhir dokumen) sebagai lanjutan, bukan replace semua
+        if (editorRef.current) editorRef.current.focus();
+        document.execCommand('insertHTML', false, ` ${result}`);
+        handleInput();
+      } else {
+        insertAiResult(result, useSelectionForInsert);
+      }
+      toast.success(
+        action === 'continue' ? 'Tulisan dilanjutkan oleh AI!' :
+        action === 'summarize' ? 'Ringkasan AI disisipkan!' :
+        'Tata bahasa diperbaiki oleh AI!'
+      );
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   const buttonClass = "p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 active:bg-white/15 transition-all text-xs flex items-center justify-center";
 
   // Prevent toolbar button click from stealing focus & clearing selection
@@ -660,6 +821,59 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         >
           <TableIcon size={15} />
         </button>
+
+        <div className="w-[1px] h-4 bg-border mx-1" />
+
+        {/* AI Writing Assistant */}
+        <div className="relative">
+          <button
+            type="button"
+            onMouseDown={preventFocusLoss}
+            onClick={() => setShowAiMenu(!showAiMenu)}
+            disabled={isAiLoading}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              isAiLoading
+                ? 'text-text-muted opacity-60 cursor-wait'
+                : 'text-violet-400 hover:text-violet-300 hover:bg-violet-500/10'
+            }`}
+            title="Asisten Penulisan AI"
+          >
+            {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            <span className="hidden sm:inline">Asisten AI</span>
+            <ChevronDown size={12} />
+          </button>
+          {showAiMenu && (
+            <div className="absolute top-8 left-0 z-50 w-56 p-1.5 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl flex flex-col gap-0.5">
+              <button
+                type="button"
+                onMouseDown={preventFocusLoss}
+                onClick={() => runAiAction('continue')}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-text-primary hover:bg-violet-500/10 text-left"
+              >
+                <Sparkles size={13} className="text-violet-400" /> Lanjutkan Tulisan
+              </button>
+              <button
+                type="button"
+                onMouseDown={preventFocusLoss}
+                onClick={() => runAiAction('summarize')}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-text-primary hover:bg-violet-500/10 text-left"
+              >
+                <Sparkles size={13} className="text-violet-400" /> Ringkas Teks
+              </button>
+              <button
+                type="button"
+                onMouseDown={preventFocusLoss}
+                onClick={() => runAiAction('grammar')}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-text-primary hover:bg-violet-500/10 text-left"
+              >
+                <Sparkles size={13} className="text-violet-400" /> Perbaiki Tata Bahasa
+              </button>
+              <p className="px-3 pt-1 pb-0.5 text-[10px] text-text-muted border-t border-border/50 mt-0.5">
+                Pakai teks terpilih, atau seluruh isi jika tidak ada seleksi.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Right side tools */}
         <div className="ml-auto flex items-center gap-2">
