@@ -28,6 +28,7 @@ export interface Note {
   content: string;
   folder: string | null;
   pinned: number;
+  cover_color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -366,6 +367,15 @@ export const wsStorage = {
     bookmarks.unshift(item);
     await rkStore.setItem('bookmarks', bookmarks);
     return item;
+  },
+
+  async updateBookmark(id: number, updates: Partial<Pick<BookmarkItem, 'url' | 'title' | 'note' | 'folder'>>): Promise<BookmarkItem | null> {
+    const bookmarks = await this.getBookmarks();
+    const idx = bookmarks.findIndex(b => b.id === id);
+    if (idx === -1) return null;
+    bookmarks[idx] = { ...bookmarks[idx], ...updates };
+    await rkStore.setItem('bookmarks', bookmarks);
+    return bookmarks[idx];
   },
 
   async deleteBookmark(id: number): Promise<void> {

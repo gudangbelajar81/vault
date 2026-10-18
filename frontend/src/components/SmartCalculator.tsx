@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
-import { Copy, Printer, Eraser, Receipt } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Copy, Printer, Eraser, Receipt, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNotepadDraftStore } from '../store/notepadDraftStore';
 
 type HistoryItem = { id: string; expression: string; result: number; note: string };
 
@@ -8,6 +9,10 @@ export const SmartCalculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const appendNotepadDraft = useNotepadDraftStore((s) => s.appendDraft);
+  // Diskon persen custom (selain preset 10%) agar UMKM bisa pakai 5%, 15%, 20%, dll.
+  const [customDiscount, setCustomDiscount] = useState('');
+
 
   // Load history from cache
   useEffect(() => {
@@ -66,6 +71,13 @@ export const SmartCalculator: React.FC = () => {
     localStorage.setItem('smart_calc_history', JSON.stringify(newH));
   };
 
+  const deleteHistoryItem = (id: string) => {
+    const newH = history.filter(h => h.id !== id);
+    setHistory(newH);
+    localStorage.setItem('smart_calc_history', JSON.stringify(newH));
+    toast.success('Item struk dihapus');
+  };
+
   const clearHistory = () => {
     if (confirm('Hapus seluruh riwayat struk?')) {
       setHistory([]);
@@ -78,43 +90,43 @@ export const SmartCalculator: React.FC = () => {
     setExpression(prev => prev + val);
   };
 
+  const applyCustomDiscount = () => {
+    const pct = parseFloat(customDiscount);
+    if (isNaN(pct) || pct <= 0 || pct >= 100) {
+      toast.error('Masukkan persen diskon valid (1-99)');
+      return;
+    }
+    const multiplier = (1 - pct / 100).toFixed(4);
+    appendToExpression(`*${multiplier}`);
+    setCustomDiscount('');
+  };
+
   const copyToNotepad = () => {
     if (history.length === 0) return toast.error('Riwayat kosong');
     let text = "=== STRUK DIGITAL ===\n";
-    let grandTotal = 0;
     history.forEach(h => {
       text += `${h.expression} = ${new Intl.NumberFormat('id-ID').format(h.result)} ${h.note ? '('+h.note+')' : ''}\n`;
-      grandTotal += h.result; // This assumes we are summing results, but actually the user might just want the list
     });
     text += "=====================\n";
-    
-    const existing = localStorage.getItem('smart_notepad_draft') || '';
-    localStorage.setItem('smart_notepad_draft', existing + '\n' + text);
-    
-    // Dispatch custom event to tell SmartNotepad to reload from localStorage
-    window.dispatchEvent(new Event('storage')); // This is a hacky way if we listen to storage, but better to just use Zustand. Since they are separate components relying on localStorage, a page reload or shared state is better. But for now we just show a toast.
-    
+
+    // Kirim langsung ke Zustand store bersama (notepadDraftStore) — tidak lagi
+    // pakai querySelector DOM-hack yang rapuh & placeholder-nya sudah tidak
+    // cocok dengan SmartNotepad. Kedua komponen sekarang baca state yang sama.
+    appendNotepadDraft('\n' + text);
+
     toast.success('Disalin ke Notepad! Pindah ke tampilan Notepad/Split untuk melihatnya.');
-    
-    // Workaround to refresh notepad:
-    const npArea = document.querySelector('textarea[placeholder="Ketik catatan di sini..."]') as HTMLTextAreaElement;
-    if (npArea) {
-      npArea.value = existing + '\n' + text;
-      // Trigger onChange
-      const event = new Event('input', { bubbles: true });
-      npArea.dispatchEvent(event);
-    }
   };
+
 
   const handlePrint = () => {
     const printContent = document.getElementById('receipt-area');
     if (!printContent) return;
-    
-    const originalBody = document.body.innerHTML;
-    document.body.innerHTML = printContent.innerHTML;
+
+    // Cetak aman tanpa merusak DOM React: pakai class + CSS @media print
+    // (lihat index.css) alih-alih replace innerHTML + reload paksa.
+    document.body.classList.add('printing-receipt');
     window.print();
-    document.body.innerHTML = originalBody;
-    window.location.reload(); // Reload to restore React bindings
+    document.body.classList.remove('printing-receipt');
   };
 
   const formatCurrency = (num: number) => new Intl.NumberFormat('id-ID').format(num);
@@ -151,7 +163,7 @@ export const SmartCalculator: React.FC = () => {
           <div className="flex flex-col gap-3">
             <div className="text-center font-bold border-b border-dashed border-gray-400 pb-2 mb-2">VAULTPRO POS<br/>====================</div>
             {history.map((h, i) => (
-              <div key={h.id} className="group relative pr-1">
+              <div key={h.id} className="group relative pr-5">
                 <div className="flex justify-between items-end gap-4 text-gray-800 dark:text-gray-300">
                   <span className="text-xs opacity-70 break-all">{h.expression} =</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(h.result)}</span>
@@ -163,6 +175,13 @@ export const SmartCalculator: React.FC = () => {
                   placeholder="Ketik nama item/label..."
                   className="w-full bg-transparent border-b border-transparent focus:border-gray-300 text-[10px] italic outline-none mt-1 opacity-50 focus:opacity-100 hover:opacity-100 transition-opacity"
                 />
+                <button
+                  onClick={() => deleteHistoryItem(h.id)}
+                  className="print:hidden absolute top-0 right-0 p-0.5 text-text-muted opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-opacity"
+                  title="Hapus item ini"
+                >
+                  <Trash2 size={12} />
+                </button>
               </div>
             ))}
             <div className="border-t border-dashed border-gray-400 mt-2 pt-2 text-right font-bold text-gray-800 dark:text-gray-200">
@@ -184,12 +203,32 @@ export const SmartCalculator: React.FC = () => {
           />
         </form>
         
+        {/* Diskon Persen Custom (selain preset 10%) */}
+        <div className="flex items-center gap-2 mb-2">
+          <input
+            type="number"
+            value={customDiscount}
+            onChange={(e) => setCustomDiscount(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCustomDiscount(); } }}
+            placeholder="Diskon custom % (misal 15)"
+            className="flex-1 bg-surface border border-border rounded-lg px-3 py-1.5 text-xs outline-none focus:border-rose-500"
+          />
+          <button
+            type="button"
+            onClick={applyCustomDiscount}
+            className="px-3 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-500/20 transition-all"
+          >
+            Terapkan Diskon
+          </button>
+        </div>
+
         <div className="grid grid-cols-4 gap-2">
           {/* Quick Cash Buttons */}
           <button type="button" onClick={() => appendToExpression('+50000')} className="col-span-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold py-2 rounded-lg text-xs hover:bg-emerald-500/20 active:scale-95 transition-all">+50rb</button>
           <button type="button" onClick={() => appendToExpression('+100000')} className="col-span-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold py-2 rounded-lg text-xs hover:bg-emerald-500/20 active:scale-95 transition-all">+100rb</button>
           <button type="button" onClick={() => appendToExpression('*0.9')} className="col-span-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold py-2 rounded-lg text-xs hover:bg-rose-500/20 active:scale-95 transition-all">Diskon 10%</button>
           <button type="button" onClick={() => appendToExpression('*1.11')} className="col-span-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold py-2 rounded-lg text-xs hover:bg-blue-500/20 active:scale-95 transition-all">PPN 11%</button>
+
 
           {/* NumPad Basic (Opsional jika ingin dipakai pakai mouse/touch) */}
           <button type="button" onClick={() => appendToExpression('7')} className="bg-surface hover:bg-black/5 dark:hover:bg-white/5 py-2 rounded-lg font-bold">7</button>

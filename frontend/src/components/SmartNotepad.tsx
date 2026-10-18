@@ -1,15 +1,20 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, Mic, Image as ImageIcon, Camera, CheckCircle2, Trash2, StopCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useVaultStore } from '../store/vaultStore';
+import { useNotepadDraftStore } from '../store/notepadDraftStore';
 import { decryptData } from '../utils/crypto';
+import { wsStorage } from '../services/workspaceStorage';
 
 import { API_URL } from '../config';
 
 export const SmartNotepad: React.FC = () => {
   const { masterPassword } = useVaultStore();
-  const [text, setText] = useState('');
+  // Draft catatan sekarang dipusatkan di Zustand store (notepadDraftStore),
+  // dipakai bersama oleh SmartCalculator untuk kirim data "Ke Notepad" tanpa
+  // DOM-hack (querySelector + dispatchEvent) yang lama & rapuh.
+  const { draft: text, setDraft: setText, clearDraft: clearDraftStore } = useNotepadDraftStore();
   
   // Voice State
   const [isRecording, setIsRecording] = useState(false);
@@ -21,38 +26,47 @@ export const SmartNotepad: React.FC = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-load draft
+  // Migrasi draft lama dari localStorage mentah (sebelum pakai Zustand store)
+  // ke store baru, sekali saja saat komponen pertama kali mount.
   useEffect(() => {
-    const draft = localStorage.getItem('smart_notepad_draft');
-    if (draft) setText(draft);
+    const legacyDraft = localStorage.getItem('smart_notepad_draft');
+    if (legacyDraft && !text) {
+      setText(legacyDraft);
+      localStorage.removeItem('smart_notepad_draft');
+    }
   }, []);
 
-  // Auto-save draft on type
+  // Auto-save draft on type (persist otomatis lewat Zustand middleware)
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setText(val);
-    localStorage.setItem('smart_notepad_draft', val);
+    setText(e.target.value);
   };
-  
-  // Listen to cross-component updates (from Calculator)
-  useEffect(() => {
-    const handleStorage = () => {
-      const draft = localStorage.getItem('smart_notepad_draft');
-      if (draft) setText(draft);
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   const clearDraft = () => {
     if (confirm('Yakin ingin menghapus semua catatan ini?')) {
-      setText('');
-      localStorage.removeItem('smart_notepad_draft');
+      clearDraftStore();
     }
   };
 
-  const handleSaveToVault = () => {
-    toast.success('Catatan draf sudah aman di HP ini.');
+
+  const handleSaveToVault = async () => {
+    if (!text.trim()) {
+      toast.error('Catatan masih kosong, tidak ada yang disimpan.');
+      return;
+    }
+    try {
+      const judul = `Catatan Meja Kerja - ${new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}`;
+      const newNote = await wsStorage.saveNote({ title: judul });
+      // Konten textarea plaintext, bungkus jadi paragraf HTML sederhana agar kompatibel dengan RichEditor
+      const htmlContent = text
+        .split('\n')
+        .map((baris) => `<p>${baris || '<br>'}</p>`)
+        .join('');
+      await wsStorage.addPage(newNote.id, 'Halaman 1', htmlContent);
+      toast.success('Catatan berhasil dikirim ke Ruang Kerja!');
+    } catch (err) {
+      console.error('Gagal kirim ke Ruang Kerja:', err);
+      toast.error('Gagal menyimpan ke Ruang Kerja. Coba lagi.');
+    }
   };
 
   // ================= AI HELPERS =================
@@ -172,7 +186,6 @@ export const SmartNotepad: React.FC = () => {
       // Append to Notepad
       const newText = text ? `${text}\n${finalResult}` : finalResult;
       setText(newText);
-      localStorage.setItem('smart_notepad_draft', newText);
       
       toast.success('Selesai!', { id: toastId });
     } catch (error: any) {
@@ -235,7 +248,6 @@ export const SmartNotepad: React.FC = () => {
       // Append to Notepad
       const newText = text ? `${text}\n${finalResult}` : finalResult;
       setText(newText);
-      localStorage.setItem('smart_notepad_draft', newText);
       
       toast.success('Gambar berhasil dibaca!', { id: toastId });
     } catch (error: any) {

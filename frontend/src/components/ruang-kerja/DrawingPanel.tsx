@@ -52,16 +52,45 @@ export const DrawingPanel: React.FC = () => {
     }, 1000);
   };
 
-  const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Menerima koordinat generik (mouse ATAU touch) agar logika tidak terduplikasi
+  const getPosFromClient = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
     };
+  };
+
+  const getPos = (e: React.MouseEvent<HTMLCanvasElement>) => getPosFromClient(e.clientX, e.clientY);
+
+  const getPosFromTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const touch = e.touches[0] || e.changedTouches[0];
+    if (!touch) return { x: 0, y: 0 };
+    return getPosFromClient(touch.clientX, touch.clientY);
+  };
+
+  const strokeTo = (pos: { x: number; y: number }) => {
+    if (!canvasRef.current || !lastPos.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+
+    ctx.beginPath();
+    ctx.moveTo(lastPos.current.x, lastPos.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    // Eraser sungguhan: hapus piksel transparan, bukan gambar warna gelap di atasnya
+    ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isEraser ? brushSize * 4 : brushSize;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+
+    lastPos.current = pos;
   };
 
   const startDraw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -70,21 +99,21 @@ export const DrawingPanel: React.FC = () => {
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing || !canvasRef.current || !lastPos.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
+    if (!drawing) return;
+    strokeTo(getPos(e));
+  };
 
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(lastPos.current.x, lastPos.current.y);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.strokeStyle = isEraser ? '#0f172a' : color;
-    ctx.lineWidth = isEraser ? brushSize * 4 : brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
+  // Touch handlers (mobile/tablet) — mencegah scroll halaman saat menggambar
+  const startDrawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    setDrawing(true);
+    lastPos.current = getPosFromTouch(e);
+  };
 
-    lastPos.current = pos;
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!drawing) return;
+    e.preventDefault();
+    strokeTo(getPosFromTouch(e));
   };
 
   const stopDraw = () => {
@@ -231,7 +260,11 @@ export const DrawingPanel: React.FC = () => {
           onMouseMove={draw}
           onMouseUp={stopDraw}
           onMouseLeave={stopDraw}
-          className="w-full h-full block"
+          onTouchStart={startDrawTouch}
+          onTouchMove={drawTouch}
+          onTouchEnd={stopDraw}
+          onTouchCancel={stopDraw}
+          className="w-full h-full block touch-none"
         />
         <div className="absolute bottom-3 right-3 text-[10px] text-text-muted/40 pointer-events-none uppercase tracking-widest font-mono">
           Auto-Saved Whiteboard · 1600x900 Canvas

@@ -184,3 +184,24 @@
   text-decoration: line-through;
   opacity: 0.55;
 }
+
+/* ===== Cetak Struk Kasir (Mesin Kasir) ===== */
+/* Saat body punya class 'printing-receipt', sembunyikan semua elemen */
+/* kecuali area struk (#receipt-area). Tidak lagi merusak DOM React. */
+@media print {
+  body.printing-receipt * {
+    visibility: hidden;
+  }
+  body.printing-receipt #receipt-area,
+  body.printing-receipt #receipt-area * {
+    visibility: visible;
+  }
+  body.printing-receipt #receipt-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

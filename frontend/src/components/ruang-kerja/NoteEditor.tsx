@@ -8,6 +8,25 @@ import { wsStorage, type Note, type NotePage, type PageHistoryItem } from '../..
 import { RichEditor } from './RichEditor';
 import toast from 'react-hot-toast';
 
+// Hash page-lock password with SHA-256 + random salt (never store plaintext)
+const bufferToHex = (buf: ArrayBuffer): string => {
+  const bytes = new Uint8Array(buf);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+const hashPassword = async (password: string, saltHex: string): Promise<string> => {
+  const enc = new TextEncoder();
+  const data = enc.encode(`${saltHex}:${password}`);
+  const digest = await window.crypto.subtle.digest('SHA-256', data);
+  return bufferToHex(digest);
+};
+
+const newSalt = (): string => {
+  const bytes = new Uint8Array(16);
+  window.crypto.getRandomValues(bytes);
+  return bufferToHex(bytes.buffer);
+};
+
 interface NoteEditorProps {
   note: Note;
   onBack: () => void;
@@ -209,8 +228,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
         toast.error('Masukkan kata sandi pengunci');
         return;
       }
-      await wsStorage.updatePage(activePage.id, { locked: 1, passwordHash: lockPassword });
-      setPages(prev => prev.map(p => p.id === activePage.id ? { ...p, locked: 1, passwordHash: lockPassword } : p));
+      const salt = newSalt();
+      const hash = await hashPassword(lockPassword, salt);
+      const stored = `${salt}:${hash}`;
+      await wsStorage.updatePage(activePage.id, { locked: 1, passwordHash: stored });
+      setPages(prev => prev.map(p => p.id === activePage.id ? { ...p, locked: 1, passwordHash: stored } : p));
       setUnlockedPages(prev => ({ ...prev, [activePage.id]: true }));
       setShowLockModal(false);
       setLockPassword('');
@@ -218,15 +240,26 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     }
   };
 
-  const handleUnlockPage = () => {
+  const handleUnlockPage = async () => {
     if (!activePage) return;
-    if (unlockPasswordInput === activePage.passwordHash) {
+    const stored = activePage.passwordHash || '';
+    const [salt, hash] = stored.split(':');
+    if (salt && hash) {
+      const attempt = await hashPassword(unlockPasswordInput, salt);
+      if (attempt === hash) {
+        setUnlockedPages(prev => ({ ...prev, [activePage.id]: true }));
+        setUnlockPasswordInput('');
+        toast.success('Halaman terbuka');
+        return;
+      }
+    } else if (unlockPasswordInput === activePage.passwordHash) {
+      // Legacy plaintext fallback for old locks
       setUnlockedPages(prev => ({ ...prev, [activePage.id]: true }));
       setUnlockPasswordInput('');
       toast.success('Halaman terbuka');
-    } else {
-      toast.error('Kata sandi salah!');
+      return;
     }
+    toast.error('Kata sandi salah!');
   };
 
   // Export HTML
@@ -422,6 +455,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     {p.locked ? <Lock size={12} className="text-amber-400 shrink-0" /> : <FileText size={12} className="shrink-0" />}
+                    <span className="shrink-0 text-[10px] font-black opacity-50 tabular-nums">{idx + 1}.</span>
                     <span className="truncate">{p.page_title || `Halaman ${idx + 1}`}</span>
                   </div>
 

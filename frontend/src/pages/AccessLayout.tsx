@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { startAuthentication } from '@simplewebauthn/browser';
+import { encryptForDevice, decryptForDevice } from '../utils/crypto';
 
 const tabs = [
   { to: '/vault', icon: LockKeyhole, label: 'Kubah' },
@@ -30,24 +31,43 @@ export const AccessLayout = () => {
   const [bioLoading, setBioLoading] = useState(false);
 
   useEffect(() => {
-    localforage.getItem('savedMasterPassword').then((val) => {
-      if (val && typeof val === 'string') setSavedMaster(val);
+    localforage.getItem('savedMasterPassword').then(async (val) => {
+      if (!val || typeof val !== 'string') return;
+      try {
+        // Coba dekripsi format baru (terenkripsi dengan device key)
+        const decrypted = await decryptForDevice(val);
+        setSavedMaster(decrypted);
+      } catch {
+        // Fallback: data lama masih plaintext (sebelum fix keamanan ini).
+        // Migrasi otomatis: pakai nilainya, lalu timpa dengan versi terenkripsi.
+        setSavedMaster(val);
+        try {
+          const migrated = await encryptForDevice(val);
+          await localforage.setItem('savedMasterPassword', migrated);
+        } catch (migErr) {
+          console.error('Gagal migrasi enkripsi savedMasterPassword:', migErr);
+        }
+      }
     });
     localforage.getItem('savedEmail').then((val) => {
       if (val && typeof val === 'string') setSavedEmail(val);
     });
   }, []);
 
-  const handleUnlock = (pwd: string) => {
+  const handleUnlock = async (pwd: string) => {
     if (!pwd || !pwd.trim()) {
       toast.error('Masukkan Master Password');
       return;
     }
     const cleanPwd = pwd.trim();
     setMasterPassword(cleanPwd);
-    localforage.setItem('savedMasterPassword', cleanPwd);
+    // Simpan terenkripsi (AES-256-GCM, key non-extractable terikat perangkat ini)
+    // alih-alih plaintext mentah di IndexedDB.
+    const encrypted = await encryptForDevice(cleanPwd);
+    await localforage.setItem('savedMasterPassword', encrypted);
     toast.success('Brankas Akses Utama Terbuka!');
   };
+
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,12 +103,20 @@ export const AccessLayout = () => {
       if (verificationRes.data.success) {
         const stored = (await localforage.getItem('savedMasterPassword')) as string;
         if (stored) {
-          setMasterPassword(stored);
-          toast.success('Brankas terbuka via Biometrik!');
+          try {
+            const decrypted = await decryptForDevice(stored);
+            setMasterPassword(decrypted);
+            toast.success('Brankas terbuka via Biometrik!');
+          } catch {
+            // Data lama masih plaintext (belum sempat dimigrasi) -> pakai langsung
+            setMasterPassword(stored);
+            toast.success('Brankas terbuka via Biometrik!');
+          }
         } else {
           toast.error('Biometrik sukses, silakan masukkan Master Password sekali untuk verifikasi.');
         }
       }
+
     } catch (error: any) {
       console.error(error);
       toast.error('Biometrik gagal, gunakan password manual.');

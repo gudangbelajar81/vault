@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText, Plus, Search, Pin, Trash2, Clock, BookOpen,
-  ChevronRight, Sparkles, BookMarked
+  ChevronRight, Sparkles, BookMarked, Folder, FolderPlus,
+  FolderOpen, Check, X, Layers, Palette
 } from 'lucide-react';
 import { wsStorage, type Note, type SearchResultItem } from '../../services/workspaceStorage';
 import { NoteEditor } from './NoteEditor';
 import toast from 'react-hot-toast';
+
+const COVER_COLORS = ['#22d3ee', '#a78bfa', '#f472b6', '#fb923c', '#4ade80', '#facc15', '#60a5fa', '#f87171'];
 
 export const NotesPanel: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -15,6 +18,15 @@ export const NotesPanel: React.FC = () => {
   const [globalResults, setGlobalResults] = useState<SearchResultItem[]>([]);
   const [searching, setSearching] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Folder hierarchy state
+  const [activeFolder, setActiveFolder] = useState<string | 'all' | 'none'>('all');
+  const [folderCreating, setFolderCreating] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [moveTarget, setMoveTarget] = useState<Note | null>(null);
+  const [moveFolderName, setMoveFolderName] = useState('');
+  // Book cover color picker state
+  const [colorTarget, setColorTarget] = useState<Note | null>(null);
+
 
   const load = async () => {
     try {
@@ -46,7 +58,8 @@ export const NotesPanel: React.FC = () => {
   }, [query]);
 
   const handleCreate = async () => {
-    const newNote = await wsStorage.saveNote({ title: 'Buku Catatan Baru' });
+    const folder = activeFolder === 'all' || activeFolder === 'none' ? null : activeFolder;
+    const newNote = await wsStorage.saveNote({ title: 'Buku Catatan Baru', folder });
     // Also create initial page
     await wsStorage.addPage(newNote.id, 'Halaman 1', '');
     await load();
@@ -62,6 +75,41 @@ export const NotesPanel: React.FC = () => {
     toast.success('Buku catatan dihapus');
   };
 
+  // Unique folder list derived from notes
+  const folderList = Array.from(
+    new Set(notes.map(n => n.folder).filter((f): f is string => !!f && f.trim().length > 0))
+  ).sort((a, b) => a.localeCompare(b, 'id'));
+
+  const handleCreateFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name) return toast.error('Nama folder tidak boleh kosong');
+    if (folderList.some(f => f.toLowerCase() === name.toLowerCase())) {
+      return toast.error('Folder dengan nama itu sudah ada');
+    }
+    setFolderCreating(false);
+    setNewFolderName('');
+    setActiveFolder(name);
+    toast.success(`Folder "${name}" dibuat. Pilih buku lalu pindahkan ke folder ini.`);
+  };
+
+  const handleMoveToFolder = async (note: Note, folder: string | null) => {
+    const updates: Partial<Note> & { title: string } = { id: note.id, title: note.title, folder };
+    await wsStorage.saveNote(updates);
+    setMoveTarget(null);
+    setMoveFolderName('');
+    await load();
+    toast.success(folder ? `Buku dipindah ke "${folder}"` : 'Buku dipindah ke Tanpa Folder');
+  };
+
+  const handleSetCoverColor = async (note: Note, color: string | null) => {
+    const updates: Partial<Note> & { title: string } = { id: note.id, title: note.title, cover_color: color || undefined };
+    await wsStorage.saveNote(updates);
+    setColorTarget(null);
+    await load();
+    toast.success('Warna sampul buku diperbarui');
+  };
+
+
   const openFromSearchResult = (noteId: number) => {
     const target = notes.find(n => n.id === noteId);
     if (target) {
@@ -70,11 +118,20 @@ export const NotesPanel: React.FC = () => {
     }
   };
 
-  const filteredNotes = notes.filter(n =>
-    !query ||
-    n.title.toLowerCase().includes(query.toLowerCase()) ||
-    (n.content && n.content.toLowerCase().includes(query.toLowerCase()))
-  );
+  const filteredNotes = notes.filter(n => {
+    // Folder filter
+    if (activeFolder === 'none') {
+      if (n.folder) return false;
+    } else if (activeFolder !== 'all') {
+      if (n.folder !== activeFolder) return false;
+    }
+    // Text query filter
+    if (!query) return true;
+    return (
+      n.title.toLowerCase().includes(query.toLowerCase()) ||
+      (n.content && n.content.toLowerCase().includes(query.toLowerCase()))
+    );
+  });
 
   const isGlobalSearchMode = query.trim().length > 0;
 
@@ -111,6 +168,82 @@ export const NotesPanel: React.FC = () => {
         >
           <Plus size={16} /> Catatan Baru
         </button>
+      </div>
+
+      {/* Folder hierarchy bar */}
+      <div className="bg-surface border border-border rounded-2xl p-3 space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-text-muted">
+            <Layers size={13} className="text-cyan-400" /> Folder Buku
+          </div>
+          <button
+            onClick={() => { setFolderCreating(v => !v); setNewFolderName(''); }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold hover:bg-cyan-500/20 transition-all"
+          >
+            <FolderPlus size={13} /> Folder Baru
+          </button>
+        </div>
+
+        {folderCreating && (
+          <div className="flex items-center gap-2">
+            <input
+              autoFocus
+              type="text"
+              value={newFolderName}
+              onChange={e => setNewFolderName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleCreateFolder(); if (e.key === 'Escape') setFolderCreating(false); }}
+              placeholder="Nama folder..."
+              className="flex-1 px-3 py-2 bg-black/20 border border-border rounded-lg text-xs text-text-primary outline-none focus:border-cyan-500/50"
+            />
+            <button onClick={handleCreateFolder} className="p-2 rounded-lg bg-cyan-500 text-black hover:bg-cyan-400 transition-all" title="Simpan folder">
+              <Check size={14} />
+            </button>
+            <button onClick={() => setFolderCreating(false)} className="p-2 rounded-lg bg-black/20 text-text-muted hover:text-text-primary transition-all" title="Batal">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setActiveFolder('all')}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+              activeFolder === 'all'
+                ? 'bg-cyan-500 text-black border-cyan-500'
+                : 'bg-black/20 text-text-muted border-border hover:text-text-primary'
+            }`}
+          >
+            Semua ({notes.length})
+          </button>
+          <button
+            onClick={() => setActiveFolder('none')}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+              activeFolder === 'none'
+                ? 'bg-cyan-500 text-black border-cyan-500'
+                : 'bg-black/20 text-text-muted border-border hover:text-text-primary'
+            }`}
+          >
+            Tanpa Folder ({notes.filter(n => !n.folder).length})
+          </button>
+          {folderList.map(f => {
+            const count = notes.filter(n => n.folder === f).length;
+            const isActive = activeFolder === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setActiveFolder(f)}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+                  isActive
+                    ? 'bg-cyan-500 text-black border-cyan-500'
+                    : 'bg-black/20 text-text-muted border-border hover:text-text-primary'
+                }`}
+              >
+                <Folder size={12} className={isActive ? 'text-black' : 'text-cyan-400'} />
+                {f} ({count})
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Global search result banner */}
@@ -190,6 +323,12 @@ export const NotesPanel: React.FC = () => {
                   {n.pinned ? <Pin size={13} className="text-amber-400 shrink-0" /> : null}
                 </div>
 
+                {n.folder ? (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold mb-2">
+                    <FolderOpen size={11} /> {n.folder}
+                  </div>
+                ) : null}
+
                 <p className="text-xs text-text-muted line-clamp-3 leading-relaxed">
                   {n.content ? n.content.replace(/<[^>]*>/g, '').slice(0, 160) : 'Buku catatan multi-halaman...'}
                 </p>
@@ -200,19 +339,98 @@ export const NotesPanel: React.FC = () => {
                   <Clock size={11} /> {n.updated_at}
                 </span>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(n.id);
-                  }}
-                  className="p-1 text-text-muted hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100"
-                  title="Hapus buku catatan"
-                >
-                  <Trash2 size={13} />
-                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMoveTarget(n);
+                      setMoveFolderName(n.folder || '');
+                    }}
+                    className="p-1 text-text-muted hover:text-cyan-400 transition-colors"
+                    title="Pindah ke folder"
+                  >
+                    <Folder size={13} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(n.id);
+                    }}
+                    className="p-1 text-text-muted hover:text-rose-400 transition-colors"
+                    title="Hapus buku catatan"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Move to folder modal */}
+      {moveTarget && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setMoveTarget(null)}
+        >
+          <div
+            className="w-full max-w-sm bg-surface border border-border rounded-2xl p-5 space-y-4 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2">
+              <FolderOpen size={18} className="text-cyan-400" />
+              <h3 className="font-bold text-sm text-text-primary">Pindah Buku ke Folder</h3>
+            </div>
+
+            <p className="text-xs text-text-muted">
+              Buku: <span className="text-text-primary font-bold">{moveTarget.title}</span>
+            </p>
+
+            <div className="space-y-1.5">
+              <button
+                onClick={() => handleMoveToFolder(moveTarget, null)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-border text-xs text-text-muted hover:text-text-primary hover:border-cyan-500/40 transition-all"
+              >
+                <X size={13} /> Tanpa Folder
+              </button>
+              {folderList.map(f => (
+                <button
+                  key={f}
+                  onClick={() => handleMoveToFolder(moveTarget, f)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-border text-xs text-text-primary hover:border-cyan-500/40 transition-all"
+                >
+                  <Folder size={13} className="text-cyan-400" /> {f}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                type="text"
+                value={moveFolderName}
+                onChange={e => setMoveFolderName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && moveFolderName.trim()) handleMoveToFolder(moveTarget, moveFolderName.trim()); }}
+                placeholder="Atau ketik nama folder baru..."
+                className="flex-1 px-3 py-2 bg-black/20 border border-border rounded-lg text-xs text-text-primary outline-none focus:border-cyan-500/50"
+              />
+              <button
+                onClick={() => moveFolderName.trim() && handleMoveToFolder(moveTarget, moveFolderName.trim())}
+                className="p-2 rounded-lg bg-cyan-500 text-black hover:bg-cyan-400 transition-all"
+                title="Pindah ke folder baru"
+              >
+                <Check size={14} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => setMoveTarget(null)}
+              className="w-full py-2 rounded-lg border border-border text-xs text-text-muted hover:text-text-primary transition-all"
+            >
+              Batal
+            </button>
+          </div>
         </div>
       )}
     </div>

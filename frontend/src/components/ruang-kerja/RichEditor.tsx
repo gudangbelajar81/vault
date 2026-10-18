@@ -31,6 +31,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const [stats, setStats] = useState({ words: 0, chars: 0 });
   const isUpdatingRef = useRef(false);
   const savedRangeRef = useRef<Range | null>(null);
+  const selectedTextRef = useRef('');
 
   // Sync content into contentEditable if changed externally
   useEffect(() => {
@@ -41,6 +42,18 @@ export const RichEditor: React.FC<RichEditorProps> = ({
       }
     }
   }, [content]);
+
+  // Track selected text inside editor for link prefill
+  useEffect(() => {
+    const onSelChange = () => {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && editorRef.current && sel.anchorNode && editorRef.current.contains(sel.anchorNode)) {
+        selectedTextRef.current = sel.toString();
+      }
+    };
+    document.addEventListener('selectionchange', onSelChange);
+    return () => document.removeEventListener('selectionchange', onSelChange);
+  }, []);
 
   const updateStats = () => {
     if (!editorRef.current) return;
@@ -259,6 +272,8 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   // Save selection before opening link modal
   const openLinkModal = () => {
     saveSelection();
+    setLinkText(selectedTextRef.current);
+    setLinkUrl('');
     setShowLinkModal(true);
   };
 
@@ -267,26 +282,46 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     if (!linkUrl.trim()) return;
     const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
     const text = linkText.trim() || url;
-    const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #00f0ff; text-decoration: underline;">${text}</a> `;
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.color = '#00f0ff';
+    a.style.textDecoration = 'underline';
+    a.textContent = text;
+    a.appendChild(document.createTextNode('\u00a0'));
 
     // Restore caret/selection lost when modal opened
     if (editorRef.current) {
       editorRef.current.focus();
+      const sel = window.getSelection();
       if (savedRangeRef.current) {
-        const sel = window.getSelection();
         sel?.removeAllRanges();
         sel?.addRange(savedRangeRef.current);
       } else {
         const range = document.createRange();
         range.selectNodeContents(editorRef.current);
         range.collapse(false);
-        const sel = window.getSelection();
         sel?.removeAllRanges();
         sel?.addRange(range);
       }
     }
 
-    document.execCommand('insertHTML', false, linkHtml);
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(a);
+      // Move caret after inserted link
+      const after = document.createRange();
+      after.setStartAfter(a);
+      after.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(after);
+    } else {
+      editorRef.current?.appendChild(a);
+    }
+
     savedRangeRef.current = null;
     setShowLinkModal(false);
     setLinkUrl('');
@@ -597,7 +632,10 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         {/* Insert Elements */}
         <button 
           type="button" 
-          onMouseDown={preventFocusLoss} 
+          onMouseDown={(e) => {
+            preventFocusLoss(e);
+            saveSelection();
+          }} 
           onClick={openLinkModal} 
           className={buttonClass} 
           title="Sisipkan Link"
