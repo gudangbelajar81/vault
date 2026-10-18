@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText, StickyNote, Paintbrush, Table2, Bookmark,
-  BookOpen, Download, Upload, ShieldCheck, Timer
+  BookOpen, Download, Upload, ShieldCheck, Timer, CloudUpload, CloudDownload, Loader2
 } from 'lucide-react';
 import { NotesPanel } from '../components/ruang-kerja/NotesPanel';
 import { StickiesPanel } from '../components/ruang-kerja/StickiesPanel';
@@ -58,6 +58,50 @@ export const RuangKerja: React.FC = () => {
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  // ── Cloud Sync ──
+  const [isSyncingUp, setIsSyncingUp] = useState(false);
+  const [isSyncingDown, setIsSyncingDown] = useState(false);
+  const [cloudStatus, setCloudStatus] = useState<{ syncedAt: string; deviceInfo?: string } | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'backup') {
+      wsStorage.getCloudSyncStatus().then(setCloudStatus);
+    }
+  }, [activeTab]);
+
+  const handlePushCloud = async () => {
+    setIsSyncingUp(true);
+    try {
+      const result = await wsStorage.pushToCloud();
+      if (result.success) {
+        toast.success(result.message);
+        if (result.syncedAt) setCloudStatus({ syncedAt: result.syncedAt });
+      } else {
+        toast.error(result.message);
+      }
+    } finally {
+      setIsSyncingUp(false);
+    }
+  };
+
+  const handlePullCloud = async () => {
+    if (!window.confirm('Menarik data dari cloud akan MENIMPA data Ruang Kerja di perangkat ini. Lanjutkan?')) return;
+    setIsSyncingDown(true);
+    try {
+      const result = await wsStorage.pullFromCloud();
+      if (result.success && result.hasData) {
+        toast.success(result.message);
+        window.location.reload();
+      } else if (result.success && !result.hasData) {
+        toast(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } finally {
+      setIsSyncingDown(false);
+    }
   };
 
   return (
@@ -143,6 +187,38 @@ export const RuangKerja: React.FC = () => {
               >
                 <Upload size={16} /> Impor / Pulihkan Cadangan
               </button>
+            </div>
+
+            <div className="border-t border-border pt-5">
+              <h3 className="font-bold text-base text-text-primary">Sinkronisasi Cloud (Backend MySQL)</h3>
+              <p className="text-xs text-text-muted mt-1">
+                Simpan snapshot Ruang Kerja ke server agar bisa diakses dari perangkat lain. Data dikirim via koneksi aman dengan sesi akun Anda.
+              </p>
+              {cloudStatus && (
+                <p className="text-xs text-emerald-400 mt-2 font-semibold">
+                  Terakhir disinkronkan: {new Date(cloudStatus.syncedAt).toLocaleString('id-ID')}
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <button
+                  onClick={handlePushCloud}
+                  disabled={isSyncingUp}
+                  className="flex items-center justify-center gap-2 p-4 rounded-xl bg-indigo-500 text-white font-bold text-xs hover:bg-indigo-400 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSyncingUp ? <Loader2 size={16} className="animate-spin" /> : <CloudUpload size={16} />}
+                  {isSyncingUp ? 'Mengunggah...' : 'Push ke Cloud'}
+                </button>
+
+                <button
+                  onClick={handlePullCloud}
+                  disabled={isSyncingDown}
+                  className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-border text-text-primary font-bold text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSyncingDown ? <Loader2 size={16} className="animate-spin" /> : <CloudDownload size={16} />}
+                  {isSyncingDown ? 'Menarik...' : 'Pull dari Cloud'}
+                </button>
+              </div>
             </div>
           </div>
         )}

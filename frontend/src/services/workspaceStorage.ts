@@ -1,4 +1,6 @@
 import localforage from 'localforage';
+import axios from 'axios';
+import { API_URL } from '../config';
 
 export interface NotePage {
   id: number;
@@ -479,5 +481,50 @@ export const wsStorage = {
     } catch {
       return false;
     }
-  }
+  },
+
+  // ── CLOUD SYNC ──
+  // Push/pull snapshot JSON lengkap ke backend. Mengikuti filosofi Ruang Kerja
+  // (akses instan, TANPA enkripsi lokal) -- data dikirim plaintext via HTTPS+auth cookie,
+  // berbeda dari VaultItem (password/API key) yang memang dienkripsi end-to-end.
+  async pushToCloud(): Promise<{ success: boolean; message: string; syncedAt?: string }> {
+    try {
+      const dataJson = await this.exportAllData();
+      const deviceInfo = `${navigator.platform || 'Unknown'} - ${navigator.userAgent.slice(0, 60)}`;
+      const res = await axios.post(
+        `${API_URL}/api/workspace-sync`,
+        { dataJson, deviceInfo },
+        { withCredentials: true }
+      );
+      return { success: !!res.data.success, message: res.data.message, syncedAt: res.data.data?.syncedAt };
+    } catch (err: any) {
+      return { success: false, message: err?.response?.data?.message || 'Gagal terhubung ke server' };
+    }
+  },
+
+  async pullFromCloud(): Promise<{ success: boolean; message: string; hasData: boolean }> {
+    try {
+      const res = await axios.get(`${API_URL}/api/workspace-sync`, { withCredentials: true });
+      if (!res.data.success || !res.data.data) {
+        return { success: true, message: 'Belum ada data cadangan di cloud', hasData: false };
+      }
+      const ok = await this.importAllData(res.data.data.dataJson);
+      return {
+        success: ok,
+        message: ok ? 'Data Ruang Kerja berhasil ditarik dari cloud' : 'Format data cloud tidak valid',
+        hasData: true,
+      };
+    } catch (err: any) {
+      return { success: false, message: err?.response?.data?.message || 'Gagal terhubung ke server', hasData: false };
+    }
+  },
+
+  async getCloudSyncStatus(): Promise<{ syncedAt: string; deviceInfo?: string } | null> {
+    try {
+      const res = await axios.get(`${API_URL}/api/workspace-sync/status`, { withCredentials: true });
+      return res.data.success ? res.data.data : null;
+    } catch {
+      return null;
+    }
+  },
 };

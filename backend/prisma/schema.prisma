@@ -25,6 +25,7 @@ model User {
   subscriptions       Subscription[]
   expenses            Expense[]
   webAuthnCredentials WebAuthnCredential[]
+  workspaceSync       WorkspaceSync?
 }
 
 model Session {
@@ -127,3 +128,21 @@ model Otp {
   created_at  DateTime @default(now())
   expires_at  DateTime
 }
+
+// ==========================================
+// RUANG KERJA CLOUD SYNC
+// ==========================================
+// Catatan desain: Ruang Kerja (notes/pages/stickies/sheets/bookmarks/drawing)
+// SENGAJA tidak dienkripsi di localforage (akses instan tanpa login/master password).
+// Blob sync ini mengikuti filosofi yang sama -- disimpan plaintext di DB,
+// BUKAN data sensitif seperti password/API key (yang sudah dienkripsi di VaultItem).
+model WorkspaceSync {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataJson   String   @db.LongText // snapshot JSON lengkap (hasil exportAllData)
+  deviceInfo String?
+  syncedAt   DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
