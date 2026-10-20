@@ -4,7 +4,8 @@ import {
   Heading1, Heading2, Heading3, List, ListOrdered, CheckSquare,
   Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
   Quote, Code, Minus, Undo2, Redo2, Maximize2, Minimize2,
-  Highlighter, Palette, X, Sparkles, Loader2, ChevronDown, FileCode2
+  Highlighter, Palette, X, Sparkles, Loader2, ChevronDown, FileCode2,
+  Copy, KeyRound
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -43,13 +44,155 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const { masterPassword } = useVaultStore();
 
+  // ================= UNDO / REDO (history stack independen, bukan document.execCommand) =================
+  // Kenapa custom? execCommand('undo'/'redo') deprecated & tidak selalu sinkron dengan state React (onChange).
+  // Dengan history stack sendiri, setiap undo/redo dipastikan ikut memanggil onChange agar parent state selalu konsisten.
+  const historyRef = useRef<{ stack: string[]; index: number }>({ stack: [content || ''], index: 0 });
+  const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const updateUndoRedoFlags = () => {
+    setCanUndo(historyRef.current.index > 0);
+    setCanRedo(historyRef.current.index < historyRef.current.stack.length - 1);
+  };
+
+  const pushHistory = (html: string) => {
+    const h = historyRef.current;
+    if (h.stack[h.index] === html) return;
+    const trimmed = h.stack.slice(0, h.index + 1);
+    trimmed.push(html);
+    if (trimmed.length > 100) trimmed.shift();
+    historyRef.current = { stack: trimmed, index: trimmed.length - 1 };
+    updateUndoRedoFlags();
+  };
+
+  const applyHistoryHtml = (html: string) => {
+    if (!editorRef.current) return;
+    editorRef.current.innerHTML = html;
+    isUpdatingRef.current = true;
+    onChange(html);
+    updateStats();
+    setTimeout(() => { isUpdatingRef.current = false; }, 50);
+  };
+
+  const undo = () => {
+    if (historyTimerRef.current) { clearTimeout(historyTimerRef.current); historyTimerRef.current = null; }
+    // Simpan dulu perubahan yang belum ter-checkpoint (debounce belum sempat jalan) sebelum mundur
+    if (editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      if (currentHtml !== historyRef.current.stack[historyRef.current.index]) {
+        pushHistory(currentHtml);
+      }
+    }
+    const h = historyRef.current;
+    if (h.index <= 0) { updateUndoRedoFlags(); return; }
+    h.index -= 1;
+    applyHistoryHtml(h.stack[h.index]);
+    updateUndoRedoFlags();
+  };
+
+  const redo = () => {
+    if (historyTimerRef.current) { clearTimeout(historyTimerRef.current); historyTimerRef.current = null; }
+    const h = historyRef.current;
+    if (h.index >= h.stack.length - 1) { updateUndoRedoFlags(); return; }
+    h.index += 1;
+    applyHistoryHtml(h.stack[h.index]);
+    updateUndoRedoFlags();
+  };
+
   // ================= MARKDOWN MODE =================
   const [isMarkdownMode, setIsMarkdownMode] = useState(false);
   const [markdownText, setMarkdownText] = useState('');
   const turndownRef = useRef<TurndownService | null>(null);
   if (!turndownRef.current) {
     turndownRef.current = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+    // Jaga elemen custom/kompleks tetap sebagai HTML mentah agar round-trip MD <-> WYSIWYG
+    // tidak merusak checklist, highlight warna, underline, maupun tabel.
+    turndownRef.current.keep((node: any) => {
+      if (!node || !node.nodeName) return false;
+      const tag = node.nodeName;
+      if (tag === 'U') return true;
+      if (['TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH'].includes(tag)) return true;
+      if (node.classList && typeof node.classList.contains === 'function' && node.classList.contains('rk-task-item')) return true;
+      if (node.getAttribute && node.getAttribute('style')) return true;
+      if (tag === 'FONT') return true;
+      return false;
+    });
   }
+
+  // ================= VAULT CREDENTIAL AUTO-LINK =================
+  // Cache daftar kredensial (url + username + password) dari Kubah agar link yang
+  // disisipkan di catatan bisa langsung "nyambung" ke kredensial yang cocok saat diklik.
+  const vaultCredsRef = useRef<{ title: string; url: string; username: string; password: string }[] | null>(null);
+  const [linkPopup, setLinkPopup] = useState<{
+    x: number; y: number; url: string; loading: boolean;
+    cred: { title: string; username: string; password: string } | null;
+  } | null>(null);
+
+  useEffect(() => {
+    // Master password berubah (vault baru dibuka/ditutup) -> cache harus dimuat ulang
+    vaultCredsRef.current = null;
+  }, [masterPassword]);
+
+  useEffect(() => {
+    if (!linkPopup) return;
+    const closeOnOutsideClick = (ev: MouseEvent) => {
+      const popupEl = document.getElementById('rk-link-popup');
+      if (popupEl && popupEl.contains(ev.target as Node)) return;
+      setLinkPopup(null);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [linkPopup]);
+
+  const loadVaultCredentials = async () => {
+    if (vaultCredsRef.current) return vaultCredsRef.current;
+    if (!masterPassword) { vaultCredsRef.current = []; return []; }
+    try {
+      const res = await axios.get(`${API_URL}/api/vault`, { withCredentials: true });
+      const list: { title: string; url: string; username: string; password: string }[] = [];
+      if (res.data.success) {
+        for (const item of res.data.data) {
+          if (item.type !== 'password') continue;
+          try {
+            const dec = JSON.parse(await decryptData(item.encryptedData, masterPassword));
+            const url = dec.url || '';
+            const username = dec.mainAccount?.username || dec.username || '';
+            const password = dec.mainAccount?.password || dec.password || '';
+            if (url && (username || password)) {
+              list.push({ title: item.title, url, username, password });
+            }
+          } catch {
+            // skip item gagal didekripsi
+          }
+        }
+      }
+      vaultCredsRef.current = list;
+      return list;
+    } catch {
+      vaultCredsRef.current = [];
+      return [];
+    }
+  };
+
+  // Normalisasi domain: buang protokol & "www." biar "https://www.google.com" == "google.com"
+  const extractHost = (raw: string): string => {
+    try {
+      let u = raw.trim();
+      if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+      return new URL(u).hostname.toLowerCase().replace(/^www\./, '');
+    } catch {
+      return raw.trim().toLowerCase().replace(/^www\./, '');
+    }
+  };
+
+  const findMatchingCredential = async (url: string) => {
+    const creds = await loadVaultCredentials();
+    const host = extractHost(url);
+    if (!host) return null;
+    return creds.find(c => extractHost(c.url) === host) || null;
+  };
 
   // Sync content into contentEditable if changed externally
   useEffect(() => {
@@ -57,6 +200,8 @@ export const RichEditor: React.FC<RichEditorProps> = ({
       if (editorRef.current.innerHTML !== content) {
         editorRef.current.innerHTML = content || '';
         updateStats();
+        historyRef.current = { stack: [content || ''], index: 0 };
+        updateUndoRedoFlags();
       }
     }
   }, [content]);
@@ -90,6 +235,12 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     setTimeout(() => {
       isUpdatingRef.current = false;
     }, 50);
+
+    // Checkpoint history (debounced) — biar tidak push setiap keystroke, tapi tetap selalu sinkron dengan onChange
+    if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
+    historyTimerRef.current = setTimeout(() => {
+      pushHistory(html);
+    }, 400);
   };
 
   // Helper to save selection
@@ -166,20 +317,51 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   };
 
   // Toggle checklist item on click (persistent via data-checked attr)
+  // + Klik Link: tampilkan popup "lompat ke sumber" lengkap kredensial Vault yang cocok (jika ada)
   const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
+
     const checkbox = target.closest('.rk-checkbox');
-    if (!checkbox || !editorRef.current) return;
-    const taskItem = checkbox.closest('.rk-task-item') as HTMLElement | null;
-    if (!taskItem) return;
-    const nextChecked = checkbox.getAttribute('data-checked') !== 'true';
-    checkbox.setAttribute('data-checked', String(nextChecked));
-    taskItem.setAttribute('data-checked', String(nextChecked));
-    handleInput();
+    if (checkbox && editorRef.current) {
+      const taskItem = checkbox.closest('.rk-task-item') as HTMLElement | null;
+      if (taskItem) {
+        const nextChecked = checkbox.getAttribute('data-checked') !== 'true';
+        checkbox.setAttribute('data-checked', String(nextChecked));
+        taskItem.setAttribute('data-checked', String(nextChecked));
+        handleInput();
+      }
+      return;
+    }
+
+    const anchor = target.closest('a') as HTMLAnchorElement | null;
+    if (anchor && editorRef.current?.contains(anchor)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = anchor.href;
+      const rect = anchor.getBoundingClientRect();
+      setLinkPopup({ x: rect.left, y: rect.bottom + 6, url, loading: true, cred: null });
+      findMatchingCredential(url).then(match => {
+        setLinkPopup(prev => (prev && prev.url === url)
+          ? { ...prev, loading: false, cred: match ? { title: match.title, username: match.username, password: match.password } : null }
+          : prev);
+      });
+    }
   };
 
   // Keyboard navigation & helpers
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Ctrl+Z / Ctrl+Y (dan Ctrl+Shift+Z) — pakai history stack custom, bukan browser-native undo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) redo(); else undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
     // Tab key: indent spaces instead of losing focus
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -430,8 +612,12 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                   }
                 }
               }
-              if (item.title === 'Groq API Key (Omni Router)') groqKey = extractedKey;
-              if (item.title === 'OpenRouter API Key') openRouterKey = extractedKey;
+              if (!extractedKey) continue;
+              // Matching title fleksibel: cukup mengandung kata kunci "groq" atau "openrouter"
+              // (case-insensitive), tidak perlu persis sama seperti nama item di Vault.
+              const titleLower = (item.title || '').toLowerCase();
+              if (!groqKey && titleLower.includes('groq')) groqKey = extractedKey;
+              if (!openRouterKey && (titleLower.includes('openrouter') || titleLower.includes('open router'))) openRouterKey = extractedKey;
             } catch {
               // skip item gagal didekripsi
             }
@@ -600,12 +786,13 @@ export const RichEditor: React.FC<RichEditorProps> = ({
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-black/20 dark:bg-black/40 border-b border-border text-xs shrink-0 select-none">
-        {/* Undo / Redo */}
+        {/* Undo / Redo — history stack React sendiri, bukan document.execCommand (lihat catatan audit) */}
         <button 
           type="button" 
           onMouseDown={preventFocusLoss} 
-          onClick={() => exec('undo')} 
-          className={buttonClass} 
+          onClick={undo} 
+          disabled={!canUndo}
+          className={`${buttonClass} disabled:opacity-30 disabled:cursor-not-allowed`} 
           title="Urungkan (Ctrl+Z)"
         >
           <Undo2 size={15} />
@@ -613,8 +800,9 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         <button 
           type="button" 
           onMouseDown={preventFocusLoss} 
-          onClick={() => exec('redo')} 
-          className={buttonClass} 
+          onClick={redo} 
+          disabled={!canRedo}
+          className={`${buttonClass} disabled:opacity-30 disabled:cursor-not-allowed`} 
           title="Ulangi (Ctrl+Y)"
         >
           <Redo2 size={15} />
@@ -988,6 +1176,72 @@ export const RichEditor: React.FC<RichEditorProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Link "Lompat ke Sumber" Popup — klik link di catatan untuk buka URL + lihat kredensial Vault yang cocok */}
+      {linkPopup && (
+        <div
+          id="rk-link-popup"
+          style={{ position: 'fixed', left: linkPopup.x, top: linkPopup.y, zIndex: 60 }}
+          className="w-72 p-3 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl space-y-2"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-text-muted truncate flex-1" title={linkPopup.url}>{linkPopup.url}</p>
+            <button
+              type="button"
+              onClick={() => setLinkPopup(null)}
+              className="text-text-muted hover:text-text-primary shrink-0"
+            >
+              <X size={13} />
+            </button>
+          </div>
+
+          <a
+            href={linkPopup.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setLinkPopup(null)}
+            className="flex items-center justify-center gap-1.5 w-full px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500 text-black hover:bg-cyan-400 transition-all"
+          >
+            <LinkIcon size={13} /> Buka Sumber
+          </a>
+
+          {linkPopup.loading ? (
+            <div className="flex items-center justify-center gap-1.5 py-2 text-[11px] text-text-muted">
+              <Loader2 size={12} className="animate-spin" /> Mencari kredensial di Kubah...
+            </div>
+          ) : linkPopup.cred ? (
+            <div className="pt-2 border-t border-border/60 space-y-1.5">
+              <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                <KeyRound size={11} /> Kredensial ditemukan: {linkPopup.cred.title}
+              </p>
+              {linkPopup.cred.username && (
+                <button
+                  type="button"
+                  onClick={() => { navigator.clipboard.writeText(linkPopup.cred!.username); toast.success('Email/username disalin!'); }}
+                  className="flex items-center justify-between gap-2 w-full px-2.5 py-1.5 rounded-lg bg-black/20 border border-border text-[11px] text-text-primary hover:border-cyan-400 transition-all"
+                >
+                  <span className="truncate">{linkPopup.cred.username}</span>
+                  <Copy size={12} className="shrink-0 text-text-muted" />
+                </button>
+              )}
+              {linkPopup.cred.password && (
+                <button
+                  type="button"
+                  onClick={() => { navigator.clipboard.writeText(linkPopup.cred!.password); toast.success('Kata sandi disalin!'); }}
+                  className="flex items-center justify-between gap-2 w-full px-2.5 py-1.5 rounded-lg bg-black/20 border border-border text-[11px] text-text-primary hover:border-cyan-400 transition-all"
+                >
+                  <span className="truncate">••••••••••</span>
+                  <Copy size={12} className="shrink-0 text-text-muted" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-[10px] text-text-muted pt-1 border-t border-border/60">
+              {masterPassword ? 'Tidak ada kredensial tersimpan di Kubah untuk domain ini.' : 'Buka Kubah (Vault) dulu untuk cek kredensial otomatis.'}
+            </p>
+          )}
         </div>
       )}
 
