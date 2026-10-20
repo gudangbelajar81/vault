@@ -335,6 +335,11 @@ export const RichEditor: React.FC<RichEditorProps> = ({
 
     const anchor = target.closest('a') as HTMLAnchorElement | null;
     if (anchor && editorRef.current?.contains(anchor)) {
+      // Klik biasa = buka link langsung di tab baru (perilaku default <a target="_blank">, JANGAN diblok).
+      // Ctrl/Cmd+Klik = tampilkan popup "lompat ke sumber" + cek kredensial Vault yang cocok.
+      if (!(e.ctrlKey || e.metaKey)) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       const url = anchor.href;
@@ -488,6 +493,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     a.rel = 'noopener noreferrer';
     a.style.color = '#00f0ff';
     a.style.textDecoration = 'underline';
+    a.title = 'Klik untuk buka link · Ctrl+Klik untuk cek kredensial Vault';
     a.textContent = text;
     a.appendChild(document.createTextNode('\u00a0'));
 
@@ -1023,7 +1029,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           }} 
           onClick={openLinkModal} 
           className={buttonClass} 
-          title="Sisipkan Link"
+          title="Sisipkan Link (klik link = buka langsung, Ctrl+Klik = cek kredensial Vault)"
         >
           <LinkIcon size={15} />
         </button>
@@ -1179,7 +1185,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         </div>
       )}
 
-      {/* Link "Lompat ke Sumber" Popup — klik link di catatan untuk buka URL + lihat kredensial Vault yang cocok */}
+      {/* Link "Lompat ke Sumber" Popup — Ctrl+Klik link di catatan untuk buka URL + lihat kredensial Vault yang cocok */}
       {linkPopup && (
         <div
           id="rk-link-popup"
