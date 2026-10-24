@@ -21,7 +21,6 @@ COPY . .
 
 # Build frontend and backend
 RUN npm run build --workspace=frontend
-RUN cd backend && npx prisma generate && cd ..
 RUN npm run build --workspace=backend
 
 FROM node:22-alpine
