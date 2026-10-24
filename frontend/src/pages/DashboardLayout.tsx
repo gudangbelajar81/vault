@@ -1,4 +1,4 @@
-﻿import toast from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar } from 'lucide-react';
@@ -65,7 +65,7 @@ export const DashboardLayout = () => {
         
         <nav className="flex-1 space-y-4">
           {navItems.map((item) => {
-            const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
+            const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses', '/employees'].includes(location.pathname);
             const isActive = location.pathname === item.to || isAksesGroup;
             
             return (
@@ -234,7 +234,7 @@ export const DashboardLayout = () => {
           <div className="flex items-center gap-1 h-14 px-2">
             <div className="flex items-center min-w-max py-2">
             {allMobileNavItems.map((item) => {
-              const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
+              const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses', '/employees'].includes(location.pathname);
               const isActive = location.pathname === item.to || isAksesGroup;
               
               return (

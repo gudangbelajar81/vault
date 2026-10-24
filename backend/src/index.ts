@@ -11,6 +11,7 @@ import licenseManagerRoutes from './routes/licenseManager';
 import webauthnRoutes from './routes/webauthn';
 import expenseRoutes from './routes/expenses';
 import workspaceSyncRoutes from './routes/workspaceSync';
+import employeeRoutes from './routes/employees';
 
 dotenv.config();
 
@@ -82,6 +83,7 @@ app.use('/api/vault', vaultRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/workspace-sync', workspaceSyncRoutes);
+app.use('/api/employees', employeeRoutes);
 app.use('/api', licenseManagerRoutes);
 
 // Global Error Boundary (Halaman 500)

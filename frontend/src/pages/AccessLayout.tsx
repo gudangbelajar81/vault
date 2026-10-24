@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { 
-  LockKeyhole, Box, Code2, RefreshCw, Compass, Banknote, 
+  LockKeyhole, Box, Code2, RefreshCw, Compass, Banknote, Users,
   ShieldCheck, Fingerprint, Eye, EyeOff, Lock, KeyRound, Sparkles, Loader2 
 } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
@@ -19,6 +19,7 @@ const tabs = [
   { to: '/subscriptions', icon: RefreshCw, label: 'Sub' },
   { to: '/courses', icon: Compass, label: 'Kursus' },
   { to: '/expenses', icon: Banknote, label: 'Pengeluaran' },
+  { to: '/employees', icon: Users, label: 'Karyawan' },
 ];
 
 export const AccessLayout = () => {
@@ -148,7 +149,7 @@ export const AccessLayout = () => {
               Gerbang Akses Utama
             </h2>
             <p className="text-xs text-text-muted mt-1 max-w-xs">
-              Satu pintu masuk berpagar aman untuk Kubah, App Manager, Kunci API, Sub, Kursus, & Pengeluaran.
+              Satu pintu masuk berpagar aman untuk Kubah, App Manager, Kunci API, Sub, Kursus, Pengeluaran, & Karyawan.
             </p>
           </div>
 
@@ -219,7 +220,7 @@ export const AccessLayout = () => {
           <div className="mt-5 pt-4 border-t border-border/60 text-center">
             <span className="text-[10px] text-text-muted flex items-center justify-center gap-1">
               <KeyRound size={12} className="text-primary" />
-              Cukup login 1 kali untuk membuka seluruh 6 modul data sensitif.
+              Cukup login 1 kali untuk membuka seluruh 7 modul data sensitif.
             </span>
           </div>
         </div>

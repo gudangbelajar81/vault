@@ -13,6 +13,7 @@ import { IdentityMap } from './pages/IdentityMap';
 import { LicenseManager } from './pages/LicenseManager';
 import { AccessLayout } from './pages/AccessLayout';
 import { Expenses } from './pages/Expenses';
+import { Employees } from './pages/Employees';
 import { KnowledgeBase } from './pages/KnowledgeBase';
 import { Workspace } from './pages/Workspace';
 import { RuangKerja } from './pages/RuangKerja';
@@ -52,6 +53,7 @@ function App() {
               <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/expenses" element={<Expenses />} />
+              <Route path="/employees" element={<Employees />} />
             </Route>
             
             {/* Menu Bebas Keluar Masuk (Tanpa Gembok) */}

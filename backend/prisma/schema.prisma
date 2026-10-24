@@ -26,6 +26,7 @@ model User {
   expenses            Expense[]
   webAuthnCredentials WebAuthnCredential[]
   workspaceSync       WorkspaceSync?
+  employees           Employee[]
 }
 
 model Session {
@@ -144,5 +145,55 @@ model WorkspaceSync {
   deviceInfo String?
   syncedAt   DateTime @updatedAt
   createdAt  DateTime @default(now())
+}
+
+// ==========================================
+// MENU KARYAWAN — GAJI & BON
+// ==========================================
+// Terinspirasi dari fitur "Gaji & Bon" di Garneta Store (POS), diadaptasi ke
+// stack VaultPro (Prisma/MySQL). Mengelola profil karyawan, hari kerja
+// (salaryType Harian/Bulanan), kasbon/bon (cash advance), dan riwayat payroll.
+model Employee {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String?
+  joinDate    DateTime
+  salaryType  String   @default("Bulanan") // "Bulanan" | "Harian"
+  baseSalary  Float    @default(0)
+  status      String   @default("Aktif") // "Aktif" | "Nonaktif" | "Cuti"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cashAdvances CashAdvance[]
+  payrolls     Payroll[]
+}
+
+model CashAdvance {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  amount     Float    @default(0)
+  notes      String?  @db.Text
+  status     String   @default("Belum Lunas") // "Belum Lunas" | "Lunas"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Payroll {
+  id                     String    @id @default(uuid())
+  employeeId             String
+  employee               Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  periodStart            DateTime?
+  periodEnd              DateTime?
+  attendanceDays         Int       @default(0)
+  basicSalaryCalculated  Float     @default(0)
+  totalDeductionBon      Float     @default(0)
+  netSalary              Float     @default(0)
+  sisaBon                Float     @default(0)
+  notes                  String?   @db.Text
+  createdAt              DateTime  @default(now())
 }
 
