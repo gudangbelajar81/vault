@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
 # Install dependencies (workspaces)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy all files
 COPY . .
@@ -24,7 +24,7 @@ RUN npm run build --workspace=frontend
 RUN cd backend && npx prisma generate && cd ..
 RUN npm run build --workspace=backend
 
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
