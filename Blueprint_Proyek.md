@@ -68,6 +68,7 @@ Struktur Route Frontend (`frontend/src/App.tsx`):
 - `/subscriptions`: Manajemen biaya langganan berulang dengan alarm jatuh tempo.
 - `/courses`: Brankas materi e-course dan link video pembelajaran.
 - `/expenses`: Catatan kas pengeluaran operasional.
+- `/employees`: **Modul Karyawan** — CRUD profil, kasbon/bon, kalkulator gaji (harian/bulanan), potong kasbon otomatis + rollover sisa, riwayat payroll, kirim struk WA.
 
 ### B. Modul Terbuka (Bebas Masuk Tanpa Halangan Login):
 - `/workspace`: Meja kerja instan.
@@ -107,9 +108,16 @@ Struktur Route Frontend (`frontend/src/App.tsx`):
   - Tombol pindah folder (`Folder` icon) di footer kartu buku membuka modal perpindahan buku ke folder baru / folder yang ada / tanpa folder.
   - Fungsi `handleCreate` otomatis mengasosiasikan buku baru ke folder yang sedang aktif.
 
-### 4. Build Status
+### 4. Modul Karyawan — Gaji & Bon (Oktober 2026)
+- **Prisma schema:** 3 model baru — `Employee`, `CashAdvance`, `Payroll` (relasi ke `User`).
+- **Backend route** `backend/src/routes/employees.ts` — CRUD karyawan, CRUD kasbon, proses penggajian dengan potong kasbon otomatis + rollover sisa bon, hapus riwayat gaji. Semua endpoint di bawah `/api/employees`.
+- **Frontend page** `frontend/src/pages/Employees.tsx` — List karyawan + dashboard per karyawan (profil, kasbon, kalkulator gaji realtime, riwayat payroll, kirim struk via WA).
+- **Navigasi:** Masuk `AccessLayout` (gerbang akses utama, tab "Karyawan" dengan icon `Users`), highlight sidebar/mobile nav saat di halaman `/employees`.
+- **Production:** Live di `https://vault.novuq.com` + `https://api-vault.novuq.com/api/employees` (HTTP 200 verified). Coolify auto-deploy dari commit `45f083b` (feat) + `b98e78b` (fix Dockerfile).
+
+### 5. Build Status (Oktober 2026)
 - **Build Tool:** `tsc && vite build`
-- **Status:** **PASS (Exit Code 0)** — 1891 modules transformed tanpa error.
+- **Status:** **PASS (Exit Code 0)** — frontend & backend tsc clean, Prisma generate clean.
 
 ---
 
