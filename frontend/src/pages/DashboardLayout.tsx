@@ -1,7 +1,7 @@
 import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar } from 'lucide-react';
+import { BookOpen, Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar, Users } from 'lucide-react';
 import { useVaultStore } from '../store/vaultStore';
 import { CommandPalette } from '../components/CommandPalette';
 import { Search } from 'lucide-react';
@@ -18,6 +18,7 @@ const navItems = [
   { to: '/shortcuts', icon: Zap, label: 'Shortcuts', activeColor: 'text-yellow-400', glow: 'shadow-yellow-500/20' },
   { to: '/identity-map', icon: Fingerprint, label: 'Identity', activeColor: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
   { to: '/licenses', icon: BadgeCheck, label: 'Licenses', activeColor: 'text-blue-400', glow: 'shadow-blue-500/20' },
+  { to: '/employees', icon: Users, label: 'Karyawan', activeColor: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
 
 export const DashboardLayout = () => {
@@ -65,7 +66,7 @@ export const DashboardLayout = () => {
         
         <nav className="flex-1 space-y-4">
           {navItems.map((item) => {
-            const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses', '/employees'].includes(location.pathname);
+            const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
             const isActive = location.pathname === item.to || isAksesGroup;
             
             return (
@@ -234,7 +235,7 @@ export const DashboardLayout = () => {
           <div className="flex items-center gap-1 h-14 px-2">
             <div className="flex items-center min-w-max py-2">
             {allMobileNavItems.map((item) => {
-              const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses', '/employees'].includes(location.pathname);
+              const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
               const isActive = location.pathname === item.to || isAksesGroup;
               
               return (
