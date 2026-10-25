@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast';
+﻿import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, Shield, Key, CreditCard, GraduationCap, Link2, LogOut, Settings, Network, Menu, X, Brain, Briefcase, Sun, Moon, Wallet, Vault, Zap, Fingerprint, Banknote, BadgeCheck, Library, RefreshCw, LayoutPanelLeft, Radar, Users } from 'lucide-react';
@@ -56,15 +56,26 @@ export const DashboardLayout = () => {
       <CommandPalette />
       <UpdateManager onUpdateStateChange={setHasUpdate} />
       <SubscriptionAlarm />
-      {/* Desktop Sidebar (Ultra Compact Icon-Only) */}
-      <aside className="hidden md:flex relative z-40 w-20 bg-surface/50 border-r border-border backdrop-blur-xl flex-col items-center py-6">
-        <div className="mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-orange-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white font-black text-xl border border-white/20">
+      
+      {/* Desktop Sidebar (Teks Label Selalu Terlihat) */}
+      <aside className="hidden md:flex relative z-40 w-56 lg:w-60 bg-surface/50 border-r border-border backdrop-blur-xl flex-col py-6 px-3">
+        {/* Brand Header */}
+        <div className="flex items-center gap-3 px-2 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-orange-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white font-black text-xl border border-white/20 shrink-0">
             V
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-orange-400 uppercase tracking-wider truncate">
+              VaultPro
+            </span>
+            <span className="text-[10px] text-text-muted font-semibold tracking-wide">
+              Command Center
+            </span>
           </div>
         </div>
         
-        <nav className="flex-1 space-y-4">
+        {/* Nav Items dengan Teks Terbaca Jelas */}
+        <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
           {navItems.map((item) => {
             const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
             const isActive = location.pathname === item.to || isAksesGroup;
@@ -73,92 +84,86 @@ export const DashboardLayout = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-xs font-bold w-full ${
                   isActive
-                    ? 'bg-gradient-to-br from-emerald-400 to-orange-500 text-white font-semibold shadow-lg shadow-emerald-500/30 border border-white/20' 
-                    : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-emerald-500/20 to-orange-500/20 text-text-primary border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
+                    : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
                 }`}
               >
-                <item.icon size={22} />
-                
-                {/* Tooltip melayang di atas icon (Desktop) */}
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-                  {item.label}
-                  {/* Segitiga panah bawah */}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
-                </span>
+                <div className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                  isActive
+                    ? 'bg-gradient-to-br from-emerald-400 to-orange-500 text-white shadow-md shadow-emerald-500/30'
+                    : 'text-text-muted group-hover:text-text-primary bg-surface/80 border border-border/50'
+                }`}>
+                  <item.icon size={16} />
+                </div>
+                <span className="truncate">{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
 
-        <div className="pt-4 border-t border-border space-y-4 mt-auto">
-          {/* Tombol Refresh & Hapus Cache (Sidebar Desktop) */}
+        {/* Action Bawah dengan Teks Terbaca Jelas */}
+        <div className="pt-3 border-t border-border space-y-1.5 mt-auto">
+          {/* Refresh & Hapus Cache */}
           <button 
             onClick={() => {
               setIsRefreshing(true);
               performHardRefresh();
             }}
-            className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-xs font-bold ${
               hasUpdate 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-500/20 animate-pulse' 
-                : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
+                : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
             }`}
             title="Refresh & Clear Cache Chrome"
           >
-            <RefreshCw size={22} className={isRefreshing ? "animate-spin" : ""} />
+            <div className="p-1.5 rounded-lg bg-surface/80 border border-border/50 text-text-muted shrink-0">
+              <RefreshCw size={15} className={isRefreshing ? "animate-spin text-emerald-400" : ""} />
+            </div>
+            <span className="truncate text-[11px]">{hasUpdate ? 'Update Baru! Refresh' : 'Refresh Cache'}</span>
             {hasUpdate && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             )}
-            {/* Tooltip Refresh */}
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-              {hasUpdate ? 'âš ï¸ Update Baru! Klik Hard Refresh' : 'Refresh & Hapus Cache'}
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
-            </span>
           </button>
 
+          {/* Settings */}
           <NavLink
             to="/settings"
             className={({ isActive }) =>
-              `group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
-                isActive ? 'bg-primary/20 text-primary font-semibold' : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5'
+              `w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-xs font-bold ${
+                isActive 
+                  ? 'bg-primary/20 text-primary border border-primary/30' 
+                  : 'text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'
               }`
             }
           >
-            {({ isActive }) => (
-              <>
-                <Settings size={22} />
-                {/* Tooltip */}
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-                  Settings
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
-                </span>
-              </>
-            )}
+            <div className="p-1.5 rounded-lg bg-surface/80 border border-border/50 text-text-muted shrink-0">
+              <Settings size={15} />
+            </div>
+            <span className="truncate text-[11px]">Settings</span>
           </NavLink>
           
+          {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
-            className="group relative flex items-center justify-center w-12 h-12 rounded-xl text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-xs font-bold border border-transparent"
           >
-            {theme === 'dark' ? <Sun size={22} /> : <Moon size={22} />}
-            {/* Tooltip Theme */}
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-xs font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
-            </span>
+            <div className="p-1.5 rounded-lg bg-surface/80 border border-border/50 text-text-muted shrink-0">
+              {theme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-indigo-400" />}
+            </div>
+            <span className="truncate text-[11px]">{theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}</span>
           </button>
 
+          {/* Logout */}
           <button 
             onClick={handleLogout}
-            className="group relative flex items-center justify-center w-12 h-12 rounded-xl text-danger hover:bg-danger/10 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-danger hover:bg-danger/10 transition-colors text-xs font-bold border border-transparent"
           >
-            <LogOut size={22} />
-            {/* Tooltip Logout */}
-            <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-danger text-white rounded-lg text-xs font-bold pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl shadow-danger/20 z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100">
-              Lock & Logout
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-danger rotate-45"></span>
-            </span>
+            <div className="p-1.5 rounded-lg bg-danger/10 border border-danger/20 text-danger shrink-0">
+              <LogOut size={15} />
+            </div>
+            <span className="truncate text-[11px]">Kunci & Keluar</span>
           </button>
         </div>
       </aside>
@@ -171,7 +176,7 @@ export const DashboardLayout = () => {
             <div className="md:hidden text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider">
               VaultPro
             </div>
-            <div className="hidden md:block text-sm text-text-muted">Command Center</div>
+            <div className="hidden md:block text-sm text-text-muted font-semibold">Command Center</div>
           </div>
           <div className="flex items-center gap-3">
             
@@ -208,12 +213,12 @@ export const DashboardLayout = () => {
             <button 
               onClick={() => {
                 if (navigator.vibrate) navigator.vibrate(30);
-                alert("ðŸª„ Syncing VaultPro data to Local HWID Vault (F:\\APLIKASI KU\\.env)... Success!");
+                alert("🪄 Syncing VaultPro data to Local HWID Vault (F:\\APLIKASI KU\\.env)... Success!");
               }}
               className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-xs font-semibold text-emerald-400 hover:scale-105 transition-transform active:scale-95 shadow-md shadow-emerald-500/10 cursor-pointer"
               title="One-Click Magic Sync ke PC Lokal"
             >
-              <span>ðŸª„</span> Magic Sync
+              <span>🪄</span> Magic Sync
             </button>
             <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-medium text-text-muted hover:text-text-primary transition-colors">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -232,8 +237,8 @@ export const DashboardLayout = () => {
       {/* Mobile Bottom Navigation (Flush to Bottom) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full bg-surface/95 backdrop-blur-xl border-t border-border shadow-[0_-5px_25px_rgba(0,0,0,0.4)] z-30 pb-safe">
         <div className="flex justify-center w-full">
-          <div className="flex items-center gap-1 h-14 px-2">
-            <div className="flex items-center min-w-max py-2">
+          <div className="flex items-center gap-1 h-14 px-2 overflow-x-auto no-scrollbar">
+            <div className="flex items-center min-w-max py-1">
             {allMobileNavItems.map((item) => {
               const isAksesGroup = item.to === '/vault' && ['/vault', '/apps', '/api-keys', '/subscriptions', '/courses', '/expenses'].includes(location.pathname);
               const isActive = location.pathname === item.to || isAksesGroup;
@@ -242,36 +247,24 @@ export const DashboardLayout = () => {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={`group relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 mx-1 ${
-                    isActive ? 'bg-primary/20 text-primary' : 'text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary'
+                  className={`flex flex-col items-center justify-center min-w-[54px] py-1 px-1 rounded-xl transition-all duration-300 mx-0.5 ${
+                    isActive ? 'bg-primary/20 text-primary font-bold' : 'text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary'
                   }`}
                 >
-                  <item.icon size={18} className={isActive ? 'drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]' : ''} />
-                  
-                  {/* Tooltip melayang di atas icon */}
-                  <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-lg text-[10px] font-bold text-text-primary pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-active:opacity-100 group-active:scale-100">
-                    {item.label}
-                    {/* Segitiga panah bawah */}
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-surface border-b border-r border-border rotate-45"></span>
-                  </span>
+                  <item.icon size={17} className={isActive ? 'drop-shadow-[0_0_8px_rgba(var(--color-primary),0.5)]' : ''} />
+                  <span className="text-[9px] mt-0.5 font-semibold tracking-tight truncate max-w-[50px]">{item.label}</span>
                 </NavLink>
               );
             })}
             
-            <div className="w-[1px] h-5 bg-border mx-1" />
+            <div className="w-[1px] h-6 bg-border mx-1" />
             
             <button
               onClick={handleLogout}
-              className="group relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 mx-1 text-danger hover:bg-danger/10 hover:text-danger/80"
+              className="flex flex-col items-center justify-center min-w-[50px] py-1 px-1 rounded-xl transition-all duration-300 mx-0.5 text-danger hover:bg-danger/10 hover:text-danger/80"
             >
-              <LogOut size={18} />
-              
-              {/* Tooltip melayang di atas icon Logout */}
-              <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-danger text-white rounded-lg text-[10px] font-bold pointer-events-none transition-all duration-200 whitespace-nowrap shadow-xl shadow-danger/20 z-50 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 group-active:opacity-100 group-active:scale-100">
-                Logout
-                {/* Segitiga panah bawah */}
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-danger rotate-45"></span>
-              </span>
+              <LogOut size={17} />
+              <span className="text-[9px] mt-0.5 font-bold tracking-tight">Logout</span>
             </button>
           </div>
         </div>
@@ -280,4 +273,3 @@ export const DashboardLayout = () => {
     </div>
   );
 };
-
