@@ -60,10 +60,11 @@ router.get('/:id', authenticate, async (req: any, res) => {
 // POST /api/employees -> tambah karyawan baru
 router.post('/', authenticate, async (req: any, res) => {
   try {
-    const { name, phone, joinDate, salaryType, baseSalary, status } = req.body;
+    const { name, phone, joinDate, salaryType, baseSalary, payDate, status } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Nama karyawan wajib diisi' });
     }
+    const parsedPayDate = payDate !== undefined && payDate !== '' ? parseInt(payDate, 10) : null;
     const employee = await prisma.employee.create({
       data: {
         userId: req.user!.id,
@@ -72,6 +73,7 @@ router.post('/', authenticate, async (req: any, res) => {
         joinDate: joinDate ? new Date(joinDate) : new Date(),
         salaryType: salaryType === 'Harian' ? 'Harian' : 'Bulanan',
         baseSalary: toNumber(baseSalary, 0),
+        payDate: !isNaN(Number(parsedPayDate)) && Number(parsedPayDate) >= 1 && Number(parsedPayDate) <= 31 ? Number(parsedPayDate) : null,
         status: status || 'Aktif',
       },
     });
@@ -90,7 +92,12 @@ router.put('/:id', authenticate, async (req: any, res) => {
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Karyawan tidak ditemukan' });
     }
-    const { name, phone, joinDate, salaryType, baseSalary, status } = req.body;
+    const { name, phone, joinDate, salaryType, baseSalary, payDate, status } = req.body;
+    let parsedPayDate = existing.payDate;
+    if (payDate !== undefined) {
+      const p = parseInt(payDate, 10);
+      parsedPayDate = !isNaN(p) && p >= 1 && p <= 31 ? p : null;
+    }
     const employee = await prisma.employee.update({
       where: { id },
       data: {
@@ -99,6 +106,7 @@ router.put('/:id', authenticate, async (req: any, res) => {
         joinDate: joinDate ? new Date(joinDate) : existing.joinDate,
         salaryType: salaryType === 'Harian' ? 'Harian' : (salaryType === 'Bulanan' ? 'Bulanan' : existing.salaryType),
         baseSalary: baseSalary !== undefined ? toNumber(baseSalary, existing.baseSalary) : existing.baseSalary,
+        payDate: parsedPayDate,
         status: status ?? existing.status,
       },
     });

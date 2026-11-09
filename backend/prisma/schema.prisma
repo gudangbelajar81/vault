@@ -162,6 +162,7 @@ model Employee {
   joinDate    DateTime
   salaryType  String   @default("Bulanan") // "Bulanan" | "Harian"
   baseSalary  Float    @default(0)
+  payDate     Int?     // Tanggal gajian bulanan (1 - 31) untuk reminder
   status      String   @default("Aktif") // "Aktif" | "Nonaktif" | "Cuti"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
