@@ -24,6 +24,7 @@ model User {
   vaultItems          VaultItem[]
   subscriptions       Subscription[]
   expenses            Expense[]
+  billProfiles        BillProfile[]
   webAuthnCredentials WebAuthnCredential[]
   workspaceSync       WorkspaceSync?
   employees           Employee[]
@@ -83,17 +84,31 @@ model Subscription {
 }
 
 model Expense {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  amount      Float
-  currency    String   @default("IDR")
-  category    String
-  date        DateTime
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  amount        Float
+  currency      String   @default("IDR")
+  category      String
+  date          DateTime
+  accountNumber String?  // No Akun / ID Pelanggan / No Meter PLN / No Internet / BPJS / Virtual Account
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BillProfile {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // Contoh: "Listrik Rumah", "Indihome Kantor"
+  category      String   // Contoh: "Listrik PLN", "Internet & Wi-Fi"
+  accountNumber String   // No Meter / ID Pelanggan
+  provider      String?  // Contoh: "PLN", "Telkom / IndiHome", "Biznet", "BPJS"
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ==========================================

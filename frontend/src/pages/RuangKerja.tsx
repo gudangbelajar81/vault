@@ -105,21 +105,21 @@ export const RuangKerja: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-full mx-auto min-h-[calc(100vh-80px)] flex flex-col gap-4">
+    <div className="p-2.5 sm:p-4 md:p-6 max-w-full mx-auto min-h-[calc(100dvh-70px)] sm:min-h-[calc(100vh-80px)] flex flex-col gap-2.5 sm:gap-4">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
+      <div className="flex flex-wrap sm:flex-row justify-between items-center gap-2 sm:gap-3 shrink-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 flex items-center gap-3">
-            <BookOpen size={28} className="text-cyan-400" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 flex items-center gap-2 sm:gap-3">
+            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400 shrink-0" />
             Ruang Kerja
           </h1>
-          <p className="text-xs md:text-sm text-text-muted mt-1">
+          <p className="hidden sm:block text-xs md:text-sm text-text-muted mt-1">
             Buku Catatan Pintar, Tempelan Memo, Whiteboard Canvas & Spreadsheet Terpadu
           </p>
         </div>
 
         {/* Quick Sync Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-xl text-xs font-semibold text-emerald-400 shadow-sm">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-surface border border-border rounded-xl text-[11px] sm:text-xs font-semibold text-emerald-400 shadow-sm">
           <ShieldCheck size={14} />
           <span>Penyimpanan Lokal Aktif & Aman</span>
         </div>
@@ -133,7 +133,7 @@ export const RuangKerja: React.FC = () => {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
                 isActive
                   ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-sm'
                   : 'text-text-muted hover:text-text-primary hover:bg-white/5 border border-transparent'

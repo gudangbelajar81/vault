@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  ArrowLeft, Plus, Trash2, Pin, PinOff, Tag, Clock, Download,
-  Columns2, SplitSquareHorizontal, Lock, Unlock, History, X,
-  Search, BookOpen, ChevronRight, FileText, Printer, Check, Loader2, FileStack
+  ArrowLeft, Plus, Trash2, Pin, Tag, Clock, Download,
+  Columns2, Lock, Unlock, History, X,
+  Search, BookOpen, ChevronRight, FileText, Printer, Loader2, FileStack,
+  ChevronLeft, MoreVertical, PanelLeftClose, PanelLeftOpen, Layers, Edit3
 } from 'lucide-react';
 import { wsStorage, type Note, type NotePage, type PageHistoryItem } from '../../services/workspaceStorage';
 import { RichEditor } from './RichEditor';
@@ -48,6 +49,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const [secondPageId, setSecondPageId] = useState<number | null>(null);
   const [isExportingBundle, setIsExportingBundle] = useState(false);
 
+  // Responsive mobile states & desktop sidebar toggle
+  const [mobileTab, setMobileTab] = useState<'pages' | 'editor'>('editor');
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showMobileActions, setShowMobileActions] = useState(false);
+
   // Password lock state
   const [showLockModal, setShowLockModal] = useState(false);
   const [lockPassword, setLockPassword] = useState('');
@@ -58,6 +64,48 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const pageContentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageTitleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const secondPageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Touch gesture swipe detector for mobile
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const targetEl = e.target as HTMLElement | null;
+    if (targetEl?.closest('table, pre, [data-no-swipe="true"]')) {
+      touchStartRef.current = null;
+      return;
+    }
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx > 0 && mobileTab === 'editor') setMobileTab('pages');
+      else if (dx < 0 && mobileTab === 'pages') setMobileTab('editor');
+    }
+  };
+
+  const activePageIndex = pages.findIndex(p => p.id === activePageId);
+
+  const goToPrevPage = () => {
+    if (activePageIndex > 0) {
+      setActivePageId(pages[activePageIndex - 1].id);
+      setMobileTab('editor');
+    }
+  };
+
+  const goToNextPage = () => {
+    if (activePageIndex >= 0 && activePageIndex < pages.length - 1) {
+      setActivePageId(pages[activePageIndex + 1].id);
+      setMobileTab('editor');
+    }
+  };
 
   const loadPages = async (targetActiveId?: number) => {
     try {
@@ -109,6 +157,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
     const newP = await wsStorage.addPage(note.id, `Halaman ${pageNum}`, '');
     setPages(prev => [...prev, newP]);
     setActivePageId(newP.id);
+    setMobileTab('editor');
     toast.success('Halaman baru ditambahkan');
   };
 
@@ -435,37 +484,66 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
   const coverColors = ['#00f0ff', '#51cf66', '#ffea00', '#ff6b6b', '#cc5de8', '#ff922b'];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] gap-3">
+    <div className="flex flex-col min-h-[460px] h-[calc(100dvh-135px)] sm:h-[calc(100vh-140px)] gap-2.5 sm:gap-3">
       {/* Top Bar Navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface border border-border rounded-2xl shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 bg-surface border border-border rounded-2xl shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all shrink-0"
           >
-            <ArrowLeft size={14} /> Kembali
+            <ArrowLeft size={14} /> <span className="hidden sm:inline">Kembali</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <BookOpen size={18} className="text-cyan-400" />
+          {/* Desktop Sidebar Toggle */}
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all shrink-0"
+            title={showSidebar ? 'Sembunyikan Daftar Halaman' : 'Tampilkan Daftar Halaman'}
+          >
+            {showSidebar ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <BookOpen size={18} className="text-cyan-400 shrink-0" />
             <input
               type="text"
               value={title}
               onChange={e => handleTitleChange(e.target.value)}
               placeholder="Judul Buku Catatan..."
-              className="bg-transparent border-none text-base md:text-lg font-black text-text-primary outline-none focus:ring-0 w-48 sm:w-64 md:w-80"
+              className="bg-transparent border-none text-sm sm:text-base md:text-lg font-black text-text-primary outline-none focus:ring-0 min-w-0 w-36 sm:w-56 md:w-80"
             />
           </div>
 
-          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+          <span className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
             saved ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10 animate-pulse'
           }`}>
             {saved ? '✓ Tersimpan' : '● Menyimpan...'}
           </span>
         </div>
 
-        {/* Global actions: Split mode, export, history */}
-        <div className="flex items-center gap-2">
+        {/* Mobile Tab Switcher: Halaman vs Editor */}
+        <div className="flex md:hidden items-center bg-black/30 border border-border rounded-xl p-0.5 shrink-0">
+          <button
+            onClick={() => setMobileTab('pages')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+              mobileTab === 'pages' ? 'bg-cyan-500 text-black shadow' : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            <Layers size={12} /> Halaman ({pages.length})
+          </button>
+          <button
+            onClick={() => setMobileTab('editor')}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+              mobileTab === 'editor' ? 'bg-cyan-500 text-black shadow' : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            <Edit3 size={12} /> Editor
+          </button>
+        </div>
+
+        {/* Desktop Global Actions */}
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => {
               setSplitMode(!splitMode);
@@ -479,7 +557,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             }`}
             title="Split Screen: Lihat & edit 2 halaman berdampingan"
           >
-            <Columns2 size={14} /> <span className="hidden sm:inline">Split Screen</span>
+            <Columns2 size={14} /> <span>Split Screen</span>
           </button>
 
           <button
@@ -487,7 +565,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all"
             title="Riwayat Versi Halaman"
           >
-            <History size={14} /> <span className="hidden sm:inline">Riwayat</span>
+            <History size={14} /> <span>Riwayat</span>
           </button>
 
           <button
@@ -495,7 +573,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all"
             title="Download file HTML offline"
           >
-            <Download size={14} /> <span className="hidden sm:inline">HTML</span>
+            <Download size={14} /> <span>HTML</span>
           </button>
 
           <button
@@ -503,7 +581,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 border border-border transition-all"
             title="Cetak atau simpan sebagai PDF"
           >
-            <Printer size={14} /> <span className="hidden sm:inline">PDF</span>
+            <Printer size={14} /> <span>PDF</span>
           </button>
 
           <button
@@ -517,15 +595,78 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
             ) : (
               <FileStack size={14} />
             )}
-            <span className="hidden sm:inline">{isExportingBundle ? 'Memproses...' : 'PDF Buku'}</span>
+            <span>{isExportingBundle ? 'Memproses...' : 'PDF Buku'}</span>
           </button>
+        </div>
+
+        {/* Mobile Dropdown Action Menu */}
+        <div className="relative md:hidden">
+          <button
+            onClick={() => setShowMobileActions(!showMobileActions)}
+            className="p-1.5 rounded-xl text-text-muted hover:text-text-primary hover:bg-white/5 border border-border"
+            title="Menu Aksi Dokumen"
+          >
+            <MoreVertical size={16} />
+          </button>
+
+          {showMobileActions && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowMobileActions(false)}
+              />
+              <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-xl shadow-xl z-50 p-1.5 space-y-1">
+                <button
+                  onClick={() => {
+                    openHistoryModal();
+                    setShowMobileActions(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-primary hover:bg-white/5 rounded-lg"
+                >
+                  <History size={14} className="text-cyan-400" /> Riwayat Versi
+                </button>
+                <button
+                  onClick={() => {
+                    exportHtml();
+                    setShowMobileActions(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-primary hover:bg-white/5 rounded-lg"
+                >
+                  <Download size={14} className="text-emerald-400" /> Download HTML
+                </button>
+                <button
+                  onClick={() => {
+                    exportPdf();
+                    setShowMobileActions(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-primary hover:bg-white/5 rounded-lg"
+                >
+                  <Printer size={14} className="text-amber-400" /> Cetak / PDF
+                </button>
+                <button
+                  onClick={() => {
+                    exportBookToPdf();
+                    setShowMobileActions(false);
+                  }}
+                  disabled={isExportingBundle}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-primary hover:bg-white/5 rounded-lg disabled:opacity-50"
+                >
+                  <FileStack size={14} className="text-purple-400" /> Ekspor Buku PDF
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Main Split Layout: Left Page Navigator + Center/Right Editor */}
-      <div className="flex-1 flex gap-3 min-h-0 overflow-hidden">
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="flex-1 flex flex-col md:flex-row gap-2.5 sm:gap-3 min-h-0 overflow-hidden overscroll-x-contain"
+      >
         {/* Left Sidebar: Pages in this Notebook */}
-        <div className="w-64 bg-surface border border-border rounded-2xl flex flex-col shrink-0 overflow-hidden">
+        <div className={`${mobileTab === 'pages' ? 'flex w-full flex-1' : 'hidden'} ${showSidebar ? 'md:flex md:w-64' : 'md:hidden'} bg-surface border border-border rounded-2xl flex-col shrink-0 overflow-hidden transition-all`}>
           {/* Header & Page Search */}
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
@@ -559,7 +700,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
               return (
                 <div
                   key={p.id}
-                  onClick={() => setActivePageId(p.id)}
+                  onClick={() => {
+                    setActivePageId(p.id);
+                    setMobileTab('editor');
+                  }}
                   style={{ borderLeftColor: p.cover_color || 'transparent' }}
                   className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs border-l-4 transition-all ${
                     isActive
@@ -573,7 +717,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
                     <span className="truncate">{p.page_title || `Halaman ${idx + 1}`}</span>
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     {p.pinned ? <Pin size={11} className="text-amber-400" /> : null}
                     <button
                       onClick={(e) => {
@@ -593,9 +737,46 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
         </div>
 
         {/* Center: Active Page Editor */}
-        <div className="flex-1 flex flex-col min-w-0 bg-surface border border-border rounded-2xl overflow-hidden p-4 space-y-3">
+        <div className={`${mobileTab === 'editor' ? 'flex w-full' : 'hidden'} md:flex flex-1 flex-col min-w-0 bg-surface border border-border rounded-2xl overflow-hidden p-3 sm:p-4 space-y-2.5 sm:space-y-3`}>
           {activePage ? (
             <>
+              {/* Mobile Quick-Nav Strip */}
+              <div className="flex md:hidden items-center justify-between gap-2 pb-2 border-b border-border text-xs shrink-0">
+                <button
+                  onClick={() => setMobileTab('pages')}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-border text-text-muted hover:text-text-primary font-semibold"
+                >
+                  <ChevronLeft size={13} /> Daftar ({pages.length})
+                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={goToPrevPage}
+                    disabled={activePageIndex <= 0}
+                    className="p-1 rounded-lg border border-border text-text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+                    title="Halaman Sebelumnya"
+                  >
+                    <ChevronLeft size={13} />
+                  </button>
+                  <span className="text-[11px] font-bold text-text-primary px-1.5 tabular-nums">
+                    {activePageIndex >= 0 ? `${activePageIndex + 1}/${pages.length}` : '-'}
+                  </span>
+                  <button
+                    onClick={goToNextPage}
+                    disabled={activePageIndex < 0 || activePageIndex >= pages.length - 1}
+                    className="p-1 rounded-lg border border-border text-text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+                    title="Halaman Selanjutnya"
+                  >
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+                <button
+                  onClick={handleAddPage}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold"
+                >
+                  <Plus size={12} /> Baru
+                </button>
+              </div>
+
               {/* Active Page Header with Cover, Title, Pin, Lock, and Tags */}
               <div
                 style={{ borderTopColor: activePage.cover_color || '#00f0ff' }}
@@ -607,7 +788,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
                     value={activePage.page_title}
                     onChange={e => handlePageTitleChange(e.target.value)}
                     placeholder="Judul Halaman..."
-                    className="text-lg md:text-xl font-black bg-transparent border-none text-text-primary outline-none focus:ring-0 flex-1 min-w-[200px]"
+                    className="text-base sm:text-lg md:text-xl font-black bg-transparent border-none text-text-primary outline-none focus:ring-0 flex-1 min-w-[140px]"
                   />
 
                   {/* Actions for active page */}
@@ -721,7 +902,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
 
         {/* Right Pane: Split Screen View (if enabled) */}
         {splitMode && (
-          <div className="flex-1 flex flex-col min-w-0 bg-surface border border-border rounded-2xl overflow-hidden p-4 space-y-3">
+          <div className="hidden md:flex flex-1 flex-col min-w-0 bg-surface border border-border rounded-2xl overflow-hidden p-3 sm:p-4 space-y-2.5 sm:space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-cyan-400">Layar 2:</span>
@@ -828,7 +1009,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note, onBack }) => {
                     key={h.id}
                     className="p-3 bg-black/20 border border-border rounded-xl flex items-center justify-between gap-3 text-xs"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="font-bold text-text-primary">Versi {history.length - i}</div>
                       <div className="text-[11px] text-text-muted flex items-center gap-1 mt-0.5">
                         <Clock size={11} /> {h.created_at}

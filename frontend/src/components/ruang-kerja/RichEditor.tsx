@@ -42,6 +42,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
   const selectedTextRef = useRef('');
   const [showAiMenu, setShowAiMenu] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showExtraTools, setShowExtraTools] = useState(false);
   const { masterPassword } = useVaultStore();
 
   // ================= UNDO / REDO (history stack independen, bukan document.execCommand) =================
@@ -779,7 +780,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
 
   return (
     <div className={`flex flex-col border border-border rounded-xl overflow-hidden bg-surface transition-all ${
-      isFullscreen ? 'fixed inset-0 z-50 rounded-none bg-bg-primary' : ''
+      isFullscreen ? 'fixed inset-0 z-50 h-[100dvh] rounded-none bg-bg-primary' : 'flex-1 min-h-0'
     }`}>
       {/* Hidden File Input for Image Upload */}
       <input
@@ -791,7 +792,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
       />
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-black/20 dark:bg-black/40 border-b border-border text-xs shrink-0 select-none">
+      <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 bg-black/20 dark:bg-black/40 border-b border-border text-xs shrink-0 select-none">
         {/* Undo / Redo — history stack React sendiri, bukan document.execCommand (lihat catatan audit) */}
         <button 
           type="button" 
@@ -814,47 +815,49 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           <Redo2 size={15} />
         </button>
 
-        <div className="w-[1px] h-4 bg-border mx-1" />
+        <div className="hidden sm:block w-[1px] h-4 bg-border mx-1" />
 
         {/* Headings */}
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => formatBlock('<h1>')} 
-          className={buttonClass} 
-          title="Judul Besar (H1)"
-        >
-          <Heading1 size={15} />
-        </button>
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => formatBlock('<h2>')} 
-          className={buttonClass} 
-          title="Subjudul (H2)"
-        >
-          <Heading2 size={15} />
-        </button>
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => formatBlock('<h3>')} 
-          className={buttonClass} 
-          title="Poin Kecil (H3)"
-        >
-          <Heading3 size={15} />
-        </button>
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => formatBlock('<p>')} 
-          className={buttonClass} 
-          title="Paragraf Biasa"
-        >
-          <span className="font-semibold text-xs px-1">P</span>
-        </button>
+        <div className={showExtraTools ? 'contents' : 'hidden sm:contents'}>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => formatBlock('<h1>')} 
+            className={buttonClass} 
+            title="Judul Besar (H1)"
+          >
+            <Heading1 size={15} />
+          </button>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => formatBlock('<h2>')} 
+            className={buttonClass} 
+            title="Subjudul (H2)"
+          >
+            <Heading2 size={15} />
+          </button>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => formatBlock('<h3>')} 
+            className={buttonClass} 
+            title="Poin Kecil (H3)"
+          >
+            <Heading3 size={15} />
+          </button>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => formatBlock('<p>')} 
+            className={buttonClass} 
+            title="Paragraf Biasa"
+          >
+            <span className="font-semibold text-xs px-1">P</span>
+          </button>
+        </div>
 
-        <div className="w-[1px] h-4 bg-border mx-1" />
+        <div className="hidden sm:block w-[1px] h-4 bg-border mx-1" />
 
         {/* Inline Formatting */}
         <button 
@@ -909,7 +912,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             <Palette size={15} />
           </button>
           {showColorPicker && (
-            <div className="absolute top-8 left-0 z-50 p-2 bg-surface border border-border rounded-xl shadow-2xl flex gap-1.5 backdrop-blur-xl">
+            <div className="absolute top-8 left-0 z-50 p-2 bg-surface border border-border rounded-xl shadow-2xl flex flex-wrap gap-1.5 backdrop-blur-xl max-w-[calc(100vw-24px)]">
               {textColors.map(c => (
                 <button
                   key={c}
@@ -939,7 +942,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             <Highlighter size={15} />
           </button>
           {showHighlightPicker && (
-            <div className="absolute top-8 left-0 z-50 p-2 bg-surface border border-border rounded-xl shadow-2xl flex gap-1.5 backdrop-blur-xl">
+            <div className="absolute top-8 left-0 z-50 p-2 bg-surface border border-border rounded-xl shadow-2xl flex flex-wrap gap-1.5 backdrop-blur-xl max-w-[calc(100vw-24px)]">
               {highlightColors.map((c, i) => (
                 <button
                   key={i}
@@ -956,7 +959,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           )}
         </div>
 
-        <div className="w-[1px] h-4 bg-border mx-1" />
+        <div className="hidden sm:block w-[1px] h-4 bg-border mx-1" />
 
         {/* Lists & Checklists */}
         <button 
@@ -987,38 +990,40 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           <CheckSquare size={15} />
         </button>
 
-        <div className="w-[1px] h-4 bg-border mx-1" />
+        <div className="hidden sm:block w-[1px] h-4 bg-border mx-1" />
 
         {/* Quote & Code */}
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => formatBlock('<blockquote>')} 
-          className={buttonClass} 
-          title="Kutipan (Quote)"
-        >
-          <Quote size={15} />
-        </button>
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={insertCode} 
-          className={buttonClass} 
-          title="Kode (Inline atau Blok)"
-        >
-          <Code size={15} />
-        </button>
-        <button 
-          type="button" 
-          onMouseDown={preventFocusLoss} 
-          onClick={() => exec('insertHorizontalRule')} 
-          className={buttonClass} 
-          title="Garis Pemisah"
-        >
-          <Minus size={15} />
-        </button>
+        <div className={showExtraTools ? 'contents' : 'hidden sm:contents'}>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => formatBlock('<blockquote>')} 
+            className={buttonClass} 
+            title="Kutipan (Quote)"
+          >
+            <Quote size={15} />
+          </button>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={insertCode} 
+            className={buttonClass} 
+            title="Kode (Inline atau Blok)"
+          >
+            <Code size={15} />
+          </button>
+          <button 
+            type="button" 
+            onMouseDown={preventFocusLoss} 
+            onClick={() => exec('insertHorizontalRule')} 
+            className={buttonClass} 
+            title="Garis Pemisah"
+          >
+            <Minus size={15} />
+          </button>
+        </div>
 
-        <div className="w-[1px] h-4 bg-border mx-1" />
+        <div className="hidden sm:block w-[1px] h-4 bg-border mx-1" />
 
         {/* Insert Elements */}
         <button 
@@ -1073,7 +1078,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             <ChevronDown size={12} />
           </button>
           {showAiMenu && (
-            <div className="absolute top-8 left-0 z-50 w-56 p-1.5 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl flex flex-col gap-0.5">
+            <div className="absolute top-8 left-0 z-50 w-56 max-w-[calc(100vw-24px)] p-1.5 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl flex flex-col gap-0.5">
               <button
                 type="button"
                 onMouseDown={preventFocusLoss}
@@ -1104,6 +1109,16 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             </div>
           )}
         </div>
+
+        {/* Toggle Tools Tambahan (Khusus Layar HP) */}
+        <button
+          type="button"
+          onClick={() => setShowExtraTools(!showExtraTools)}
+          className={`${buttonClass} sm:hidden text-cyan-400`}
+          title={showExtraTools ? 'Sembunyikan Menu Tambahan' : 'Menu Format Tambahan'}
+        >
+          <ChevronDown size={14} className={`transition-transform duration-200 ${showExtraTools ? 'rotate-180' : ''}`} />
+        </button>
 
         {/* Right side tools */}
         <div className="ml-auto flex items-center gap-2">
@@ -1190,7 +1205,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         <div
           id="rk-link-popup"
           style={{ position: 'fixed', left: linkPopup.x, top: linkPopup.y, zIndex: 60 }}
-          className="w-72 p-3 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl space-y-2"
+          className="w-72 max-w-[calc(100vw-24px)] p-3 bg-surface border border-border rounded-xl shadow-2xl backdrop-blur-xl space-y-2"
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-[11px] text-text-muted truncate flex-1" title={linkPopup.url}>{linkPopup.url}</p>
@@ -1260,8 +1275,8 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         onClick={handleEditorClick}
         onKeyDown={handleKeyDown}
         data-placeholder={placeholder}
-        style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight, display: isMarkdownMode ? 'none' : undefined }}
-        className="flex-1 p-5 outline-none overflow-y-auto text-sm leading-relaxed text-text-primary focus:outline-none rk-editor-body"
+        style={{ minHeight: isFullscreen ? 'calc(100dvh - 80px)' : (minHeight === '380px' ? undefined : minHeight), display: isMarkdownMode ? 'none' : undefined }}
+        className={'flex-1 min-h-0 ' + (minHeight === '380px' && !isFullscreen ? 'min-h-[180px] sm:min-h-[300px]' : '') + ' p-3 sm:p-5 outline-none overflow-y-auto text-sm leading-relaxed text-text-primary focus:outline-none rk-editor-body'}
       />
 
       {/* Markdown Raw Mode */}
@@ -1270,8 +1285,8 @@ export const RichEditor: React.FC<RichEditorProps> = ({
           value={markdownText}
           onChange={handleMarkdownChange}
           placeholder={'# Judul\n\nTulis dalam format Markdown mentah di sini...'}
-          style={{ minHeight: isFullscreen ? 'calc(100vh - 80px)' : minHeight }}
-          className="flex-1 p-5 outline-none resize-none bg-black/10 text-sm leading-relaxed text-text-primary font-mono focus:outline-none"
+          style={{ minHeight: isFullscreen ? 'calc(100dvh - 80px)' : (minHeight === '380px' ? undefined : minHeight) }}
+          className={'flex-1 min-h-0 ' + (minHeight === '380px' && !isFullscreen ? 'min-h-[180px] sm:min-h-[300px]' : '') + ' p-3 sm:p-5 outline-none resize-none bg-black/10 text-sm leading-relaxed text-text-primary font-mono focus:outline-none'}
           spellCheck={false}
         />
       )}

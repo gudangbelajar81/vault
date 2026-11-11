@@ -16,9 +16,8 @@ const tabs = [
   { to: '/vault', icon: LockKeyhole, label: 'Kubah' },
   { to: '/apps', icon: Box, label: 'App Manager' },
   { to: '/api-keys', icon: Code2, label: 'Kunci API' },
-  { to: '/subscriptions', icon: RefreshCw, label: 'Sub' },
+  { to: '/expenses', icon: Banknote, label: 'Pengeluaran & Subs' },
   { to: '/courses', icon: Compass, label: 'Kursus' },
-  { to: '/expenses', icon: Banknote, label: 'Pengeluaran' },
   { to: '/employees', icon: Users, label: 'Karyawan' },
 ];
 
@@ -149,7 +148,7 @@ export const AccessLayout = () => {
               Gerbang Akses Utama
             </h2>
             <p className="text-xs text-text-muted mt-1 max-w-xs">
-              Satu pintu masuk berpagar aman untuk Kubah, App Manager, Kunci API, Sub, Kursus, Pengeluaran, & Karyawan.
+              Satu pintu masuk berpagar aman untuk Kubah, App Manager, Kunci API, Pengeluaran & Subs, Kursus, & Karyawan.
             </p>
           </div>
 

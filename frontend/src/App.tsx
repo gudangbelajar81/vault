@@ -4,7 +4,6 @@ import { Auth } from './pages/Auth';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { Vault } from './pages/Vault';
 import { AppManager } from './pages/AppManager';
-import { Subscriptions } from './pages/Subscriptions';
 import { ApiKeys } from './pages/ApiKeys';
 import { Courses } from './pages/Courses';
 import { Shortcuts } from './pages/Shortcuts';
@@ -50,7 +49,7 @@ function App() {
               <Route path="/vault" element={<Vault />} />
               <Route path="/apps" element={<AppManager />} />
               <Route path="/api-keys" element={<ApiKeys />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/subscriptions" element={<Navigate to="/expenses?tab=subs" replace />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/employees" element={<Employees />} />
